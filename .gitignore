@@ -1,0 +1,45 @@
+# 환경변수 / secret
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# 의존성
+node_modules/
+
+# 빌드
+dist/
+build/
+
+# 로그
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 데이터 / 업로드
+data/
+uploads/
+
+# OS 파일
+.DS_Store
+Thumbs.db
+
+# 에디터
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# TypeScript 캐시
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# 테스트 커버리지
+coverage/
+.nyc_output/
