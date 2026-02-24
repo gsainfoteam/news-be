@@ -9,9 +9,17 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { ListArticlesQueryDto } from './dto/list-articles-query.dto';
@@ -20,7 +28,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 @ApiTags('Articles')
 @Controller('articles')
 export class ArticlesController {
-  constructor(private readonly articlesService: ArticlesService) {}
+  constructor(private readonly articlesService: ArticlesService) { }
 
   @Get()
   @ApiOperation({ summary: '기사 목록 조회' })
@@ -46,20 +54,26 @@ export class ArticlesController {
   }
 
   @Post()
-  @ApiOperation({ summary: '기사 생성' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '기사 생성 (관리자 전용)' })
   create(@Body() payload: CreateArticleDto) {
     return this.articlesService.create(payload);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: '기사 수정' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '기사 수정 (관리자 전용)' })
   @ApiParam({ name: 'id', type: Number })
   update(@Param('id', ParseIntPipe) id: number, @Body() payload: UpdateArticleDto) {
     return this.articlesService.update(id, payload);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: '기사 삭제' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '기사 삭제 (관리자 전용)' })
   @ApiParam({ name: 'id', type: Number })
   @HttpCode(204)
   async remove(@Param('id', ParseIntPipe) id: number) {

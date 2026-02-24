@@ -22,3 +22,12 @@ model Article {
 
   @@map("articles")
 }
+
+model Admin {
+  id             Int      @id @default(autoincrement())
+  username       String   @unique @db.VarChar(80)
+  hashedPassword String   @map("hashed_password") @db.VarChar(255)
+  createdAt      DateTime @map("created_at") @default(now())
+
+  @@map("admins")
+}

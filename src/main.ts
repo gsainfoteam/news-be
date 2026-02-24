@@ -1,7 +1,8 @@
+import 'reflect-metadata';
+import * as dotenv from 'dotenv';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as dotenv from 'dotenv';
 
 import { AppModule } from './modules/app.module';
 
@@ -25,6 +26,8 @@ async function bootstrap() {
     app.enableCors({
       origin: origins,
       credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     });
   }
 
@@ -40,6 +43,7 @@ async function bootstrap() {
     .setTitle('지스트신문 API')
     .setDescription('지스트신문')
     .setVersion('2.0.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

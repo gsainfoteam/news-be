@@ -29,6 +29,8 @@ npm run start:dev
 | POST | `/articles` | 기사 생성 |
 | PATCH | `/articles/:id` | 기사 수정 |
 | DELETE | `/articles/:id` | 기사 삭제 |
+| POST | `/auth/login` | 관리자 로그인 (access, refresh token 발급) |
+| POST | `/auth/refresh` | Access Token 재발급 |
 | GET | `/health` | 서버 상태 |
 
 Swagger UI: `http://localhost:3001/docs`

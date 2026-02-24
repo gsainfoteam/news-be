@@ -1,20 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { asc, isNotNull, ne, sql } from 'drizzle-orm';
 
-import { DrizzleService } from '../../database/drizzle.service';
 import { PrismaService } from '../../database/prisma.service';
 import { ListArticlesQueryDto } from './dto/list-articles-query.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { articles } from '../../database/drizzle.schema';
 
 @Injectable()
 export class ArticlesService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly drizzle: DrizzleService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async list(query: ListArticlesQueryDto) {
     const limit = query.limit ?? 20;
@@ -24,12 +18,12 @@ export class ArticlesService {
       ...(query.category ? { category: query.category } : {}),
       ...(query.query
         ? {
-            OR: [
-              { title: { contains: query.query } },
-              { summary: { contains: query.query } },
-              { content: { contains: query.query } },
-            ],
-          }
+          OR: [
+            { title: { contains: query.query } },
+            { summary: { contains: query.query } },
+            { content: { contains: query.query } },
+          ],
+        }
         : {}),
     };
 
@@ -46,15 +40,18 @@ export class ArticlesService {
     return { total, items, limit, offset };
   }
 
-  async listCategories() {
-    const rows = await this.drizzle.db
-      .select({ value: articles.category })
-      .from(articles)
-      .where(sql`${isNotNull(articles.category)} and ${ne(articles.category, '')}`)
-      .groupBy(articles.category)
-      .orderBy(asc(articles.category));
+  async listCategories(): Promise<string[]> {
+    const rows = await this.prisma.article.groupBy({
+      by: ['category'],
+      where: {
+        category: { not: null },
+      },
+      orderBy: { category: 'asc' },
+    });
 
-    return rows.map((row) => row.value).filter((value): value is string => Boolean(value));
+    return rows
+      .map((row) => row.category)
+      .filter((category): category is string => Boolean(category));
   }
 
   async get(id: number) {
