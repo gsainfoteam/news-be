@@ -3,19 +3,22 @@
 ## 스택
 
 - **Framework**: NestJS
-- **ORM**: Prisma (CRUD) + Drizzle 
+- **ORM**: Prisma
 - **DB**: PostgreSQL
 - **API Docs**: Swagger (`/docs`)
 
 ## 시작하기
 
 ```bash
-# 1. 설치 및 DB 세팅
+# 1. 환경변수 설정
+cp .env.example .env 
+
+# 2. 설치 및 DB 세팅
 npm install
 npm run prisma:generate
 npm run prisma:push
 
-# 2. 실행
+# 3. 실행
 npm run start:dev
 ```
 
