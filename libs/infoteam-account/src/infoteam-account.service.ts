@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InfoteamAccountUserInfoResponse } from './types/infoteam-account.type';
-import { UserInfo } from './types/userInfo.type';
+import { UserInfo } from './types/user-info.type';
 
 @Injectable()
 export class InfoteamAccountService {
