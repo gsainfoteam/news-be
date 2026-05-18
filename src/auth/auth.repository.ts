@@ -4,7 +4,9 @@ import { UserInfo } from '@lib/infoteam-account';
 import { refreshToken, user } from '../../drizzle/schema';
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { RefreshTokenEntity } from '../../libs/drizzle/src/entity/refresh-token.entity';
+import { Loggable } from '@lib/logger';
 
+@Loggable()
 @Injectable()
 export class AuthRepository {
   private readonly logger = new Logger(AuthRepository.name);

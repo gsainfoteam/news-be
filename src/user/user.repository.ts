@@ -1,8 +1,10 @@
 import { DrizzleService } from '@lib/drizzle';
+import { Loggable } from '@lib/logger';
 import { Injectable, Logger } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { user } from 'drizzle/schema';
 
+@Loggable()
 @Injectable()
 export class UserRepository {
   private readonly logger = new Logger(UserRepository.name);

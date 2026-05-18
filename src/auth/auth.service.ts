@@ -6,7 +6,9 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthRepository } from './auth.repository';
 import { ConfigService } from '@nestjs/config';
 import ms, { StringValue } from 'ms';
+import { Loggable } from '@lib/logger';
 
+@Loggable()
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
