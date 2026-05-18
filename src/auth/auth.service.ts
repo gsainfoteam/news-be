@@ -50,6 +50,11 @@ export class AuthService {
     return await this.issueTokens(tokenRecord.userId, tokenRecord.expiresAt);
   }
 
+  async logout(refreshToken: string): Promise<void> {
+    const hashedToken = this.hashToken(refreshToken);
+    await this.authRepository.deleteRefreshToken(hashedToken);
+  }
+
   private async issueTokens(
     uuid: string,
     refreshTokenExpiresAt?: Date,

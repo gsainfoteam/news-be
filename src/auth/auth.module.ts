@@ -7,6 +7,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import ms, { StringValue } from 'ms';
 import { AuthRepository } from './auth.repository';
 import { DrizzleModule } from '@lib/drizzle';
+import { UserModule } from 'src/user/user.module';
+import { JwtGuard } from './guard/jwt.guard';
+import { JwtStrategy } from './guard/jwt.strategy';
 
 @Module({
   imports: [
@@ -26,8 +29,9 @@ import { DrizzleModule } from '@lib/drizzle';
       }),
     }),
     DrizzleModule,
+    UserModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthRepository],
+  providers: [AuthService, AuthRepository, JwtGuard, JwtStrategy],
 })
 export class AuthModule {}

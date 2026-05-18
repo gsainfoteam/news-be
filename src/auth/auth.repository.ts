@@ -3,7 +3,7 @@ import { DrizzleService } from '@lib/drizzle';
 import { UserInfo } from '@lib/infoteam-account';
 import { refreshToken, user } from '../../drizzle/schema';
 import { and, eq, gte, lt } from 'drizzle-orm';
-import { RefreshTokenEntity } from './entity/refresh-token.entity';
+import { RefreshTokenEntity } from '../../libs/drizzle/src/entity/refresh-token.entity';
 
 @Injectable()
 export class AuthRepository {

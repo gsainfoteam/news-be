@@ -95,16 +95,7 @@ async function bootstrap() {
         name: 'JWT',
         in: 'header',
       },
-      'editor',
-    )
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        name: 'JWT',
-        in: 'header',
-      },
-      'user',
+      'jwt',
     )
     .build();
 

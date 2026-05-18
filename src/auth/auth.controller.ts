@@ -4,8 +4,10 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiInternalServerErrorResponse,
   ApiOAuth2,
   ApiOkResponse,
@@ -17,6 +19,7 @@ import type { Request, Response } from 'express';
 import ms, { StringValue } from 'ms';
 import { ConfigService } from '@nestjs/config';
 import { JwtTokenDto } from './dto/res/token.dto';
+import { JwtGuard } from './guard/jwt.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -78,6 +81,7 @@ export class AuthController {
 
     const { access_token, refresh_token, expiresAt } =
       await this.authService.refresh(refreshToken);
+
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: true,
@@ -85,7 +89,28 @@ export class AuthController {
       expires: expiresAt,
       path: '/auth',
     });
-
     return { access_token };
+  }
+
+  @ApiOperation({
+    summary: 'Logout',
+    description: 'Logout the user from the cookie. Delete the refresh token.',
+  })
+  @ApiOkResponse({ description: 'Logout' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @Post('logout')
+  @UseGuards(JwtGuard)
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const refreshToken = req.cookies['refresh_token'] as string;
+    if (!refreshToken) return;
+    await this.authService.logout(refreshToken);
+    res.clearCookie('refresh_token', {
+      path: '/auth',
+    });
   }
 }
