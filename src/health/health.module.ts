@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { HealthController } from './health.controller';
 import { TerminusModule } from '@nestjs/terminus';
-import { DrizzleModule } from 'libs/drizzle/drizzle.module';
+import { DrizzleModule } from '@lib/drizzle';
 
 @Module({
   imports: [DrizzleModule, TerminusModule.forRoot({ errorLogStyle: 'json' })],

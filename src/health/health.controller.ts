@@ -1,3 +1,4 @@
+import { DrizzleService } from '@lib/drizzle';
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -6,7 +7,6 @@ import {
   MemoryHealthIndicator,
   HealthIndicatorService,
 } from '@nestjs/terminus';
-import { DrizzleService } from 'libs/drizzle/drizzle.service';
 import { sql } from 'drizzle-orm';
 
 @ApiTags('health')
