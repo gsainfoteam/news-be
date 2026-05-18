@@ -71,12 +71,14 @@ async function bootstrap() {
         name: 'infoteam-account-token',
         in: 'header',
         bearerFormat: 'token',
+        'x-tokenName': 'id_token',
         flows: {
           authorizationCode: {
             authorizationUrl:
               configService.getOrThrow<string>('SWAGGER_AUTH_URL'),
             tokenUrl: configService.getOrThrow<string>('SWAGGER_TOKEN_URL'),
             scopes: {
+              openid: 'openid',
               email: 'email',
               name: 'name',
               profile: 'profile',
@@ -111,9 +113,14 @@ async function bootstrap() {
     swaggerOptions: {
       displayRequestDuration: true,
       oauth2RedirectUrl: `${configService.getOrThrow<string>('API_URL')}/api/oauth2-redirect.html`,
+      persistAuthorization: true,
       initOAuth: {
         usePkceWithAuthorizationCodeGrant: true,
         clientId: configService.getOrThrow<string>('CLIENT_ID'),
+        scopes: ['openid', 'email', 'name', 'profile'],
+        additionalQueryStringParams: {
+          nonce: 'nonce',
+        },
       },
     },
   });

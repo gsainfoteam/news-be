@@ -1,2 +1,3 @@
 export * from './infoteam-account.module';
 export * from './infoteam-account.service';
+export * from './types';
