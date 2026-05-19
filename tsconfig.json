@@ -20,6 +20,14 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@lib/drizzle": ["libs/drizzle/src"],
+      "@lib/drizzle/*": ["libs/drizzle/src/*"],
+      "@lib/infoteam-account": ["libs/infoteam-account/src"],
+      "@lib/infoteam-account/*": ["libs/infoteam-account/src/*"],
+      "@lib/logger": ["libs/logger/src"],
+      "@lib/logger/*": ["libs/logger/src/*"]
+    }
   }
 }
