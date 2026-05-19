@@ -12,7 +12,7 @@ export class DrizzleService implements OnModuleDestroy {
   constructor(private readonly configService: ConfigService) {
     const databaseUrl = this.configService.getOrThrow<string>('DATABASE_URL');
     this.client = postgres(databaseUrl);
-    this.db = drizzle(this.client);
+    this.db = drizzle(this.client, { schema });
   }
 
   async onModuleDestroy() {

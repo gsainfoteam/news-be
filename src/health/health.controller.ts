@@ -32,8 +32,8 @@ export class HealthController {
         try {
           await this.drizzleService.db.execute(sql`SELECT 1`);
           return indicator.up();
-        } catch (error) {
-          return indicator.down({ message: (error as Error).message });
+        } catch {
+          return indicator.down('Database Check Failed');
         }
       },
       () => this.memory.checkRSS('memory_rss', 1024 * 1024 * 200),

@@ -1,4 +1,4 @@
-import { DrizzleService } from '@lib/drizzle';
+import { DrizzleService, existOrThrow } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
 import { Injectable, Logger } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
@@ -21,13 +21,6 @@ export class UserRepository {
       .select()
       .from(user)
       .where(eq(user.id, id))
-      .then((rows) => rows[0])
-      .catch((error) => {
-        this.logger.error(
-          `Error occurred while fetching user by ID: ${id}`,
-          error,
-        );
-        throw error;
-      });
+      .then(existOrThrow('User not found'));
   }
 }

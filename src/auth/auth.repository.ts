@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DrizzleService } from '@lib/drizzle';
+import { DrizzleService, RefreshTokenEntity, existOrThrow } from '@lib/drizzle';
 import { UserInfo } from '@lib/infoteam-account';
 import { refreshToken, user } from '../../drizzle/schema';
 import { and, eq, gte, lt } from 'drizzle-orm';
-import { RefreshTokenEntity } from '../../libs/drizzle/src/entity/refresh-token.entity';
 import { Loggable } from '@lib/logger';
 
 @Loggable()
@@ -75,7 +74,7 @@ export class AuthRepository {
         ),
       )
       .limit(1)
-      .then((rows) => rows[0]);
+      .then(existOrThrow('Refresh token is invalid or expired'));
   }
 
   /*
@@ -87,7 +86,7 @@ export class AuthRepository {
       .delete(refreshToken)
       .where(eq(refreshToken.token, token))
       .returning()
-      .then((rows) => rows[0]);
+      .then(existOrThrow('Refresh token is invalid'));
   }
 
   /*

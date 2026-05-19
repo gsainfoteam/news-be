@@ -1,4 +1,4 @@
-import { UserEntity } from '@lib/drizzle/entity/user.entity';
+import { UserEntity } from '@lib/drizzle';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export const GetUser = createParamDecorator(

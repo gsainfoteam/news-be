@@ -61,10 +61,7 @@ export class AuthService {
     uuid: string,
     refreshTokenExpiresAt?: Date,
   ): Promise<JwtTokenType> {
-    const refresh_token = crypto
-      .randomBytes(32)
-      .toString('base64')
-      .replace(/[+//=]/g, '');
+    const refresh_token = crypto.randomBytes(32).toString('base64url');
     const expiresAt =
       refreshTokenExpiresAt ?? new Date(Date.now() + this.refreshTokenExpire);
     await this.authRepository.createRefreshToken(
