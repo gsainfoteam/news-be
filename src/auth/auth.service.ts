@@ -33,7 +33,7 @@ export class AuthService {
     const token = auth.split(' ')[1];
     if (!token) throw new UnauthorizedException();
 
-    const userinfo = this.infoteamAccountService.getUserInfo(token);
+    const userinfo = await this.infoteamAccountService.getUserInfo(token);
 
     await this.authRepository.upsertUser(userinfo);
     await this.authRepository.deleteExpiredRefreshTokens(userinfo.uuid);
