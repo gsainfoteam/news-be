@@ -47,6 +47,20 @@ export class UserDto {
   role!: Role;
 
   @ApiProperty({
+    description: 'terms agreed at',
+    example: '2026-01-01T00:00:00.000Z',
+  })
+  @Expose()
+  termsAgreedAt!: Date;
+
+  @ApiProperty({
+    description: 'privacy agreed at',
+    example: '2026-01-01T00:00:00.000Z',
+  })
+  @Expose()
+  privacyAgreedAt!: Date;
+
+  @ApiProperty({
     description: 'created at',
     example: '2026-01-01T00:00:00.000Z',
   })

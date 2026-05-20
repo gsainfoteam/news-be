@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from 'jsonwebtoken';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtTokenType } from 'src/auth/types/jwt-token.type';
+import { UpdateNicknameDto } from './dto/req/update-nickname.dto';
 
 @Loggable()
 @Injectable()
@@ -42,12 +43,19 @@ export class UserService {
     return await this.authService.issueTokens(sub);
   }
 
-  async getMe(user: UserEntity) {
+  async getMe(user: UserEntity): Promise<UserDto> {
     const editor = await this.editorService.findEditorByEmail(user.email);
     return new UserDto(user, editor);
   }
 
-  async findUserById(id: string) {
+  async updateNickname(
+    user: UserEntity,
+    { nickname }: UpdateNicknameDto,
+  ): Promise<void> {
+    await this.userRepository.updateNickname(user.id, nickname);
+  }
+
+  async findUserById(id: string): Promise<UserEntity> {
     return await this.userRepository.findUserById(id);
   }
 }

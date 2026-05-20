@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import {
   ApiBearerAuth,
@@ -15,6 +23,7 @@ import { UserDto } from './dto/res/user.dto';
 import { RegisterUserDto } from './dto/req/register-user.dto';
 import { JwtTokenDto } from 'src/auth/dto/res/token.dto';
 import type { Response } from 'express';
+import { UpdateNicknameDto } from './dto/req/update-nickname.dto';
 
 @Controller('user')
 export class UserController {
@@ -55,8 +64,8 @@ export class UserController {
     description: 'Retrieve the profile of the currently authenticated user.',
   })
   @ApiOkResponse({
-    description: 'The user profile has been successfully retrieved.',
     type: UserDto,
+    description: 'The user profile has been successfully retrieved.',
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiNotFoundResponse({ description: 'Not Found' })
@@ -66,5 +75,25 @@ export class UserController {
   @Get('me')
   async getMe(@GetUser() user: UserEntity): Promise<UserDto> {
     return await this.userService.getMe(user);
+  }
+
+  @ApiOperation({
+    summary: 'Update Nickname',
+    description: 'Update the nickname of the currently authenticated user.',
+  })
+  @ApiOkResponse({
+    description: 'The user profile has been successfully updated.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiNotFoundResponse({ description: 'Not Found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtGuard)
+  @Patch('nickname')
+  async updateNickname(
+    @GetUser() user: UserEntity,
+    @Body() body: UpdateNicknameDto,
+  ): Promise<void> {
+    await this.userService.updateNickname(user, body);
   }
 }
