@@ -3,6 +3,7 @@ import { Loggable } from '@lib/logger';
 import { Injectable, Logger } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { user } from 'drizzle/schema';
+import { UpdateConsentDto } from './dto/req/update-consent.dto';
 
 @Loggable()
 @Injectable()
@@ -23,6 +24,32 @@ export class UserRepository {
         nickname,
         termsAgreedAt: new Date(),
         privacyAgreedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, id));
+  }
+
+  /*
+  UPDATE "user"
+  SET terms_agreed_at = NOW(), privacy_agreed_at = NOW()
+  WHERE id = id;
+  */
+  async updateConsent(
+    id: string,
+    { isTermsAgreed, isPrivacyAgreed }: UpdateConsentDto,
+  ): Promise<void> {
+    await this.drizzleService.db
+      .update(user)
+      .set({
+        ...(isTermsAgreed !== undefined &&
+          isTermsAgreed !== null && {
+            termsAgreedAt: isTermsAgreed ? new Date() : null,
+          }),
+        ...(isPrivacyAgreed !== undefined &&
+          isPrivacyAgreed !== null && {
+            privacyAgreedAt: isPrivacyAgreed ? new Date() : null,
+          }),
+        updatedAt: new Date(),
       })
       .where(eq(user.id, id));
   }
@@ -35,7 +62,7 @@ export class UserRepository {
   async updateNickname(id: string, nickname: string): Promise<void> {
     await this.drizzleService.db
       .update(user)
-      .set({ nickname })
+      .set({ nickname, updatedAt: new Date() })
       .where(eq(user.id, id));
   }
 

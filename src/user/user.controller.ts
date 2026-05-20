@@ -24,6 +24,7 @@ import { RegisterUserDto } from './dto/req/register-user.dto';
 import { JwtTokenDto } from 'src/auth/dto/res/token.dto';
 import type { Response } from 'express';
 import { UpdateNicknameDto } from './dto/req/update-nickname.dto';
+import { UpdateConsentDto } from './dto/req/update-consent.dto';
 
 @Controller('user')
 export class UserController {
@@ -75,6 +76,31 @@ export class UserController {
   @Get('me')
   async getMe(@GetUser() user: UserEntity): Promise<UserDto> {
     return await this.userService.getMe(user);
+  }
+
+  @ApiOperation({
+    summary: 'Update Consent',
+    description:
+      'Update the consent status of the currently authenticated user.\n\n' +
+      'Rules for consent fields:\n' +
+      '- `true`: Updates the agreement date to the current time.\n' +
+      '- `false`: Sets the agreement date to `null` (disagreed).\n' +
+      '- `null`: Keeps the existing agreement date (no change).',
+  })
+  @ApiOkResponse({
+    description: 'The user consent has been successfully updated.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiNotFoundResponse({ description: 'Not Found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(JwtGuard)
+  @Patch('consent')
+  async updateConsent(
+    @GetUser() user: UserEntity,
+    @Body() body: UpdateConsentDto,
+  ): Promise<void> {
+    await this.userService.updateConsent(user, body);
   }
 
   @ApiOperation({

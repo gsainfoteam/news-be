@@ -26,7 +26,8 @@ export class AuthController {
   @ApiOperation({
     summary: 'User Login',
     description:
-      'Issue JWT token. User must provide a valid Infoteam Account OpenID Token in the Authorization header.',
+      'Issue JWT token. User must provide a valid Infoteam Account OpenID Token in the Authorization header.\n' +
+      'If a `tempToken` is returned, it indicates that the user is not yet registered and must complete the registration process using the provided token.',
   })
   @ApiOkResponse({ type: JwtTokenDto, description: 'Login success' })
   @ApiUnauthorizedResponse({
