@@ -36,8 +36,8 @@ export class InfoteamAccountService implements OnModuleInit {
         this.logger.error('Failed to verify ID token', err);
         throw err;
       });
-    const { sub: uuid, name, email, profile } = payload;
-    return { uuid, name, email, profile };
+    const { sub: uuid, name, email, picture } = payload;
+    return { uuid, name, email, picture };
   }
 
   private async getPublicKey(): Promise<Buffer> {

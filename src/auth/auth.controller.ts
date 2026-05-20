@@ -43,7 +43,7 @@ export class AuthController {
     description: 'Invalid Infoteam Account OpenID Token',
   })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
-  @ApiOAuth2(['email', 'profile', 'student_id', 'phone_number'], 'oauth2')
+  @ApiOAuth2(['name', 'email', 'picture'], 'oauth2')
   @Post('login')
   async login(
     @Req() req: Request,
@@ -100,8 +100,8 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
-  @Post('logout')
   @UseGuards(JwtGuard)
+  @Post('logout')
   async logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,

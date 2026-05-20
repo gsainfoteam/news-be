@@ -1,10 +1,11 @@
+import { boolean } from 'drizzle-orm/pg-core';
 import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
   id: uuid('id').primaryKey(),
   email: text('email').notNull().unique(),
   name: text('name').notNull(),
-  profile: text('profile'),
+  picture: text('picture'),
   nickname: text('nickname'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -18,4 +19,12 @@ export const refreshToken = pgTable('refresh_token', {
   token: text('token').notNull().unique(),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const editor = pgTable('editor', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  isEditorship: boolean('is_editorship').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
