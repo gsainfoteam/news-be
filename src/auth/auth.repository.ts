@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DrizzleService, RefreshTokenEntity, existOrThrow } from '@lib/drizzle';
+import {
+  DrizzleService,
+  RefreshTokenEntity,
+  UserEntity,
+  existOrThrow,
+} from '@lib/drizzle';
 import { UserInfo } from '@lib/infoteam-account';
 import { refreshToken, user } from '../../drizzle/schema';
 import { and, eq, gte, lt } from 'drizzle-orm';
@@ -21,8 +26,8 @@ export class AuthRepository {
     picture = EXCLUDED.picture,
     updated_at = NOW();
   */
-  async upsertUser(userInfo: UserInfo): Promise<void> {
-    await this.drizzleService.db
+  async upsertUser(userInfo: UserInfo): Promise<UserEntity> {
+    return await this.drizzleService.db
       .insert(user)
       .values({
         id: userInfo.uuid,
@@ -38,7 +43,9 @@ export class AuthRepository {
           picture: userInfo.picture,
           updatedAt: new Date(),
         },
-      });
+      })
+      .returning()
+      .then(existOrThrow('Failed to upsert user'));
   }
 
   /*

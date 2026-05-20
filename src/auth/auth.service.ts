@@ -1,5 +1,5 @@
 import { InfoteamAccountService } from '@lib/infoteam-account';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtTokenType } from './types/jwt-token.type';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
@@ -11,9 +11,9 @@ import { Loggable } from '@lib/logger';
 @Loggable()
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
   private readonly refreshTokenSecret: string;
   private readonly refreshTokenExpire: number;
+  private readonly jwtTempSecret: string;
 
   constructor(
     private readonly infoteamAccountService: InfoteamAccountService,
@@ -27,15 +27,28 @@ export class AuthService {
     this.refreshTokenExpire = ms(
       this.configService.getOrThrow<StringValue>('REFRESH_TOKEN_EXPIRE'),
     );
+    this.jwtTempSecret =
+      this.configService.getOrThrow<string>('JWT_TEMP_SECRET');
   }
 
   async login(auth: string): Promise<JwtTokenType> {
     const token = auth.split(' ')[1];
     if (!token) throw new UnauthorizedException();
-
     const userinfo = await this.infoteamAccountService.getUserInfo(token);
 
-    await this.authRepository.upsertUser(userinfo);
+    const user = await this.authRepository.upsertUser(userinfo);
+    if (user.termsAgreedAt === null || user.privacyAgreedAt === null)
+      return {
+        tempToken: this.jwtService.sign(
+          {},
+          {
+            subject: userinfo.uuid,
+            secret: this.jwtTempSecret,
+            expiresIn: '5m',
+          },
+        ),
+      };
+
     await this.authRepository.deleteExpiredRefreshTokens(userinfo.uuid);
 
     return await this.issueTokens(userinfo.uuid);
@@ -57,21 +70,21 @@ export class AuthService {
     await this.authRepository.deleteRefreshToken(hashedToken);
   }
 
-  private async issueTokens(
+  async issueTokens(
     uuid: string,
     refreshTokenExpiresAt?: Date,
   ): Promise<JwtTokenType> {
-    const refresh_token = crypto.randomBytes(32).toString('base64url');
+    const refreshToken = crypto.randomBytes(32).toString('base64url');
     const expiresAt =
       refreshTokenExpiresAt ?? new Date(Date.now() + this.refreshTokenExpire);
     await this.authRepository.createRefreshToken(
       uuid,
-      this.hashToken(refresh_token),
+      this.hashToken(refreshToken),
       expiresAt,
     );
     return {
-      access_token: this.jwtService.sign({}, { subject: uuid }),
-      refresh_token,
+      accessToken: this.jwtService.sign({}, { subject: uuid }),
+      refreshToken,
       expiresAt,
     };
   }

@@ -12,6 +12,22 @@ export class UserRepository {
   constructor(private readonly drizzleService: DrizzleService) {}
 
   /*
+  UPDATE "user"
+  SET nickname = nickname, terms_agreed_at = NOW(), privacy_agreed_at = NOW()
+  WHERE id = id;
+  */
+  async registerUser(id: string, nickname?: string): Promise<void> {
+    await this.drizzleService.db
+      .update(user)
+      .set({
+        nickname,
+        termsAgreedAt: new Date(),
+        privacyAgreedAt: new Date(),
+      })
+      .where(eq(user.id, id));
+  }
+
+  /*
   SELECT *
   FROM user
   WHERE id = id;
