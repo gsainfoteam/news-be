@@ -63,4 +63,8 @@ export class UserService {
   async findUserById(id: string): Promise<UserEntity> {
     return await this.userRepository.findUserById(id);
   }
+
+  async findUsersByEmails(emails: string[]): Promise<UserEntity[]> {
+    return await this.userRepository.findUsersByEmails(emails);
+  }
 }

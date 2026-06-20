@@ -1,7 +1,7 @@
 import { DrizzleService, existOrThrow, UserEntity } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
 import { Injectable, Logger } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { user } from 'drizzle/schema';
 import { UpdateConsentDto } from './dto/req/update-consent.dto';
 
@@ -77,5 +77,18 @@ export class UserRepository {
       .from(user)
       .where(eq(user.id, id))
       .then(existOrThrow('User not found'));
+  }
+
+  /*
+  SELECT *
+  FROM user
+  WHERE email IN (emails);
+  */
+  async findUsersByEmails(emails: string[]): Promise<UserEntity[]> {
+    if (emails.length === 0) return [];
+    return await this.drizzleService.db
+      .select()
+      .from(user)
+      .where(inArray(user.email, emails));
   }
 }
