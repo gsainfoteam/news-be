@@ -30,4 +30,8 @@ export class EditorService {
   async findEditorByEmail(email: string): Promise<EditorEntity | null> {
     return await this.editorRepository.findEditorByEmail(email);
   }
+
+  async deleteEditor(id: string): Promise<void> {
+    await this.editorRepository.deleteEditor(id);
+  }
 }

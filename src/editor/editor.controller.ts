@@ -1,8 +1,18 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
@@ -52,5 +62,24 @@ export class EditorController {
   @Post()
   async registerEditors(@Body() { emails }: RegisterEditorsDto): Promise<void> {
     await this.editorService.registerEditors(emails);
+  }
+
+  @ApiOperation({
+    summary: 'Delete Editor',
+    description: 'Soft delete an editor by recording the deletedAt timestamp.',
+  })
+  @ApiOkResponse({
+    description: 'The editor has been successfully deleted.',
+  })
+  @ApiNotFoundResponse({ description: 'Not found' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @RequiredRole(Role.EDITORSHIP)
+  @UseGuards(EditorGuard)
+  @Delete(':id')
+  async deleteEditor(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.editorService.deleteEditor(id);
   }
 }

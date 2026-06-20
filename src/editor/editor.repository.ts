@@ -1,6 +1,11 @@
-import { DrizzleService, EditorEntity, UserEntity } from '@lib/drizzle';
+import {
+  DrizzleService,
+  EditorEntity,
+  existOrThrow,
+  UserEntity,
+} from '@lib/drizzle';
 import { Injectable } from '@nestjs/common';
-import { eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { editor, user } from 'drizzle/schema';
 
 @Injectable()
@@ -43,18 +48,17 @@ export class EditorRepository {
   }
 
   /*
-  SELECT *
-  FROM user
-  WHERE email = email
-  LIMIT 1;
+  UPDATE editor
+  SET updated_at = NOW(), deleted_at = NOW()
+  WHERE id = id AND deleted_at IS NULL;
   */
-  async findUserByEmail(email: string): Promise<UserEntity | null> {
-    return await this.drizzleService.db
-      .select()
-      .from(user)
-      .where(eq(user.email, email))
-      .limit(1)
-      .then((res) => res[0] ?? null);
+  async deleteEditor(id: string): Promise<void> {
+    await this.drizzleService.db
+      .update(editor)
+      .set({ updatedAt: new Date(), deletedAt: new Date() })
+      .where(and(eq(editor.id, id), isNull(editor.deletedAt)))
+      .returning()
+      .then(existOrThrow('Editor not found'));
   }
 
   /*
