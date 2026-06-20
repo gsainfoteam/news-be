@@ -1,12 +1,7 @@
 import { EditorEntity, UserEntity } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
-
-enum Role {
-  USER = 'USER',
-  EDITOR = 'EDITOR',
-  EDITORSHIP = 'EDITORSHIP',
-}
+import { Role } from 'src/user/enum/role.enum';
 
 @Exclude()
 export class UserDto {

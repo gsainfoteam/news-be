@@ -8,6 +8,10 @@ import { Loggable } from '@lib/logger';
 export class EditorService {
   constructor(private readonly editorRepository: EditorRepository) {}
 
+  async findEditors(): Promise<EditorEntity[]> {
+    return await this.editorRepository.findEditors();
+  }
+
   async findEditorByEmail(email: string): Promise<EditorEntity | null> {
     return await this.editorRepository.findEditorByEmail(email);
   }

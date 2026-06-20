@@ -4,4 +4,5 @@ export class EditorEntity {
   isEditorship!: boolean;
   createdAt!: Date;
   updatedAt!: Date;
+  deletedAt!: Date | null;
 }
