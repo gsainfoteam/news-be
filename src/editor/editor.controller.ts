@@ -23,6 +23,8 @@ import { RegisterEditorsDto } from './dto/req/register-editors.dto';
 import { RequiredRole } from './decorator/role.decorator';
 import { Role } from 'src/user/enum/role.enum';
 import { EditorDto } from './dto/res/editor.dto';
+import { GetUser } from 'src/user/decorator/get-user.decorator';
+import { UserEntity } from '@lib/drizzle';
 
 @Controller('editor')
 export class EditorController {
@@ -81,5 +83,26 @@ export class EditorController {
   @Delete(':id')
   async deleteEditor(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.editorService.deleteEditor(id);
+  }
+
+  @ApiOperation({
+    summary: 'Transfer Editorship',
+    description: 'Transfer editorship to a different user.',
+  })
+  @ApiOkResponse({
+    description: 'The editorship has been successfully transferred.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @RequiredRole(Role.EDITORSHIP)
+  @UseGuards(EditorGuard)
+  @Post(':id/editorship')
+  async transferEditorship(
+    @GetUser() user: UserEntity,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    await this.editorService.transferEditorship(user.id, id);
   }
 }

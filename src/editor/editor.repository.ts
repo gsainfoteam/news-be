@@ -62,6 +62,37 @@ export class EditorRepository {
   }
 
   /*
+  UPDATE editor
+  SET isEditorship = FALSE, updated_at = NOW()
+  WHERE id = currentEditorShipId AND deleted_at IS NULL;
+
+  UPDATE editor
+  SET isEditorship = TRUE, updated_at = NOW()
+  WHERE id = newEditorShipId AND deleted_at IS NULL;
+  */
+  async transferEditorship(
+    currentEditorShipId: string,
+    newEditorShipId: string,
+  ): Promise<void> {
+    await this.drizzleService.db.transaction(async (tx) => {
+      await tx
+        .update(editor)
+        .set({ isEditorship: false, updatedAt: new Date() })
+        .where(
+          and(eq(editor.id, currentEditorShipId), isNull(editor.deletedAt)),
+        )
+        .returning()
+        .then(existOrThrow('Editor not found'));
+      await tx
+        .update(editor)
+        .set({ isEditorship: true, updatedAt: new Date() })
+        .where(and(eq(editor.id, newEditorShipId), isNull(editor.deletedAt)))
+        .returning()
+        .then(existOrThrow('Editor not found'));
+    });
+  }
+
+  /*
   SELECT *
   FROM editor
   WHERE email = email

@@ -6,6 +6,13 @@ import { Role } from 'src/user/enum/role.enum';
 @Exclude()
 export class UserDto {
   @ApiProperty({
+    description: 'id',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @Expose()
+  id!: string;
+
+  @ApiProperty({
     description: 'email',
     example: 'email@gm.gist.ac.kr',
   })

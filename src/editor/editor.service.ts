@@ -27,11 +27,21 @@ export class EditorService {
     return await this.editorRepository.registerEditors(emails);
   }
 
-  async findEditorByEmail(email: string): Promise<EditorEntity | null> {
-    return await this.editorRepository.findEditorByEmail(email);
+  async deleteEditor(id: string): Promise<void> {
+    return await this.editorRepository.deleteEditor(id);
   }
 
-  async deleteEditor(id: string): Promise<void> {
-    await this.editorRepository.deleteEditor(id);
+  async transferEditorship(
+    currentEditorShipId: string,
+    newEditorShipId: string,
+  ): Promise<void> {
+    return await this.editorRepository.transferEditorship(
+      currentEditorShipId,
+      newEditorShipId,
+    );
+  }
+
+  async findEditorByEmail(email: string): Promise<EditorEntity | null> {
+    return await this.editorRepository.findEditorByEmail(email);
   }
 }
