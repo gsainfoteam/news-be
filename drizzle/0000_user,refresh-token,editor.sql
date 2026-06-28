@@ -23,8 +23,8 @@ CREATE TABLE "user" (
 	"name" text NOT NULL,
 	"picture" text,
 	"nickname" text,
-	"terms_agreed_at" timestamp NOT NULL,
-	"privacy_agreed_at" timestamp NOT NULL,
+	"terms_agreed_at" timestamp,
+	"privacy_agreed_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "user_email_unique" UNIQUE("email")

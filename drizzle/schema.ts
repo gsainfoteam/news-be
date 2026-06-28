@@ -9,8 +9,8 @@ export const user = pgTable('user', {
   name: text('name').notNull(),
   picture: text('picture'),
   nickname: text('nickname'),
-  termsAgreedAt: timestamp('terms_agreed_at').notNull(),
-  privacyAgreedAt: timestamp('privacy_agreed_at').notNull(),
+  termsAgreedAt: timestamp('terms_agreed_at'),
+  privacyAgreedAt: timestamp('privacy_agreed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

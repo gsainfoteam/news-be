@@ -35,6 +35,7 @@ export class AuthService {
     const token = auth.split(' ')[1];
     if (!token) throw new UnauthorizedException();
     const userinfo = await this.infoteamAccountService.getUserInfo(token);
+    await this.authRepository.deleteExpiredRefreshTokens(userinfo.uuid);
 
     const user = await this.authRepository.upsertUser(userinfo);
     if (user.termsAgreedAt === null || user.privacyAgreedAt === null)
@@ -48,8 +49,6 @@ export class AuthService {
           },
         ),
       };
-
-    await this.authRepository.deleteExpiredRefreshTokens(userinfo.uuid);
 
     return await this.issueTokens(userinfo.uuid);
   }

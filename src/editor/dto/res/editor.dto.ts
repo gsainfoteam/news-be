@@ -29,6 +29,7 @@ export class EditorDto {
   @ApiPropertyOptional({
     description: 'picture',
     example: 'https://.../picture.jpg',
+    type: String,
   })
   @Expose()
   picture?: string | null;

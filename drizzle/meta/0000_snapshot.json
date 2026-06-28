@@ -1,5 +1,5 @@
 {
-  "id": "c9990f1c-1f7d-46d2-b7ff-9398d5b1846d",
+  "id": "68cdb65e-3945-4c3c-9946-32f5afe7437c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -187,13 +187,13 @@
           "name": "terms_agreed_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "privacy_agreed_at": {
           "name": "privacy_agreed_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

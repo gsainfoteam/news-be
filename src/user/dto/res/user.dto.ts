@@ -29,6 +29,7 @@ export class UserDto {
   @ApiPropertyOptional({
     description: 'picture',
     example: 'https://.../picture.jpg',
+    type: String,
   })
   @Expose()
   picture!: string | null;
@@ -36,6 +37,7 @@ export class UserDto {
   @ApiPropertyOptional({
     description: 'nickname',
     example: '지니어스',
+    type: String,
   })
   @Expose()
   nickname!: string | null;
@@ -48,19 +50,21 @@ export class UserDto {
   @Expose()
   role!: Role;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'terms agreed at',
     example: '2026-01-01T00:00:00.000Z',
+    type: Date,
   })
   @Expose()
-  termsAgreedAt!: Date;
+  termsAgreedAt!: Date | null;
 
   @ApiPropertyOptional({
     description: 'privacy agreed at',
     example: '2026-01-01T00:00:00.000Z',
+    type: Date,
   })
   @Expose()
-  privacyAgreedAt!: Date;
+  privacyAgreedAt!: Date | null;
 
   @ApiProperty({
     description: 'created at',
