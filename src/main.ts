@@ -1,10 +1,10 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import expressBasicAuth from 'express-basic-auth';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,6 +22,7 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const corsWhitelist = configService
     .getOrThrow<string>('CORS_ORIGINS')
@@ -81,7 +82,7 @@ async function bootstrap() {
               openid: 'openid',
               email: 'email',
               name: 'name',
-              profile: 'profile',
+              picture: 'picture',
             },
           },
         },
@@ -108,7 +109,7 @@ async function bootstrap() {
       initOAuth: {
         usePkceWithAuthorizationCodeGrant: true,
         clientId: configService.getOrThrow<string>('CLIENT_ID'),
-        scopes: ['openid', 'email', 'name', 'profile'],
+        scopes: ['openid', 'email', 'name', 'picture'],
         additionalQueryStringParams: {
           nonce: 'nonce',
         },

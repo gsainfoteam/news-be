@@ -4,6 +4,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { LoggerModule } from '@lib/logger';
+import { EditorModule } from './editor/editor.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { LoggerModule } from '@lib/logger';
     LoggerModule,
     AuthModule,
     UserModule,
+    EditorModule,
     HealthModule,
   ],
 })
