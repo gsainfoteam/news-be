@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - dohyun06/issue5
-    paths:
-      - src/**
-      - drizzle/**
   workflow_dispatch:
 
 env:
