@@ -33,9 +33,13 @@ export class UserService {
     tempToken,
     nickname,
   }: RegisterUserDto): Promise<JwtTokenType> {
-    const payload: JwtPayload = this.jwtService.verify(tempToken, {
-      secret: this.jwtTempSecret,
-    });
+    const payload: JwtPayload = await this.jwtService
+      .verifyAsync<JwtPayload>(tempToken, {
+        secret: this.jwtTempSecret,
+      })
+      .catch(() => {
+        throw new UnauthorizedException('invalid token');
+      });
     const { sub } = payload;
     if (!sub) throw new UnauthorizedException('invalid token');
 
@@ -62,9 +66,5 @@ export class UserService {
 
   async findUserById(id: string): Promise<UserEntity> {
     return await this.userRepository.findUserById(id);
-  }
-
-  async findUsersByEmails(emails: string[]): Promise<UserEntity[]> {
-    return await this.userRepository.findUsersByEmails(emails);
   }
 }

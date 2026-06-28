@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Param,
   ParseUUIDPipe,
@@ -103,6 +104,11 @@ export class EditorController {
     @GetUser() user: UserEntity,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
-    await this.editorService.transferEditorship(user.id, id);
+    const curEditorship = await this.editorService.findEditorByEmail(
+      user.email,
+    );
+    if (!curEditorship || !curEditorship.isEditorship)
+      throw new ForbiddenException('Current user is not an editorship');
+    await this.editorService.transferEditorship(curEditorship.id, id);
   }
 }

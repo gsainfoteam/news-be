@@ -41,7 +41,6 @@ export class UserController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiNotFoundResponse({ description: 'Not Found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
-  @ApiBearerAuth('jwt')
   @Post()
   async registerUser(
     @Res({ passthrough: true }) res: Response,

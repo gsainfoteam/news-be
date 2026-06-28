@@ -26,7 +26,9 @@ export class UserRepository {
         privacyAgreedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(user.id, id));
+      .where(eq(user.id, id))
+      .returning()
+      .then(existOrThrow('User not found'));
   }
 
   /*
@@ -41,17 +43,17 @@ export class UserRepository {
     await this.drizzleService.db
       .update(user)
       .set({
-        ...(isTermsAgreed !== undefined &&
-          isTermsAgreed !== null && {
-            termsAgreedAt: isTermsAgreed ? new Date() : null,
-          }),
-        ...(isPrivacyAgreed !== undefined &&
-          isPrivacyAgreed !== null && {
-            privacyAgreedAt: isPrivacyAgreed ? new Date() : null,
-          }),
+        ...(isTermsAgreed && {
+          termsAgreedAt: new Date(),
+        }),
+        ...(isPrivacyAgreed && {
+          privacyAgreedAt: new Date(),
+        }),
         updatedAt: new Date(),
       })
-      .where(eq(user.id, id));
+      .where(eq(user.id, id))
+      .returning()
+      .then(existOrThrow('User not found'));
   }
 
   /*
@@ -63,7 +65,9 @@ export class UserRepository {
     await this.drizzleService.db
       .update(user)
       .set({ nickname, updatedAt: new Date() })
-      .where(eq(user.id, id));
+      .where(eq(user.id, id))
+      .returning()
+      .then(existOrThrow('User not found'));
   }
 
   /*
@@ -77,18 +81,5 @@ export class UserRepository {
       .from(user)
       .where(eq(user.id, id))
       .then(existOrThrow('User not found'));
-  }
-
-  /*
-  SELECT *
-  FROM user
-  WHERE email IN (emails);
-  */
-  async findUsersByEmails(emails: string[]): Promise<UserEntity[]> {
-    if (emails.length === 0) return [];
-    return await this.drizzleService.db
-      .select()
-      .from(user)
-      .where(inArray(user.email, emails));
   }
 }
