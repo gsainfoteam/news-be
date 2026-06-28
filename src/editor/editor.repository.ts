@@ -95,14 +95,14 @@ export class EditorRepository {
   /*
   SELECT *
   FROM editor
-  WHERE email = email
+  WHERE email = email AND deleted_at IS NULL
   LIMIT 1;
   */
   async findEditorByEmail(email: string): Promise<EditorEntity | null> {
     return this.drizzleService.db
       .select()
       .from(editor)
-      .where(eq(editor.email, email))
+      .where(and(eq(editor.email, email), isNull(editor.deletedAt)))
       .limit(1)
       .then((row) => row[0]);
   }
