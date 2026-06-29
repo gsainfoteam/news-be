@@ -3,7 +3,9 @@ name: Update Database (Dev)
 on:
   push:
     branches:
-      - dohyun06/issue5
+      - main
+    paths:
+      - drizzle/**
   workflow_dispatch:
 
 jobs:

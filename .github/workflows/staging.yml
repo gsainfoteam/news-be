@@ -3,7 +3,10 @@ name: Update Kubernetes Cluster (Dev)
 on:
   push:
     branches:
-      - dohyun06/issue5
+      - main
+    paths:
+      - src/**
+      - drizzle/**
   workflow_dispatch:
 
 env:
