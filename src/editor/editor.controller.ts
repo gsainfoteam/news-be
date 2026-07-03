@@ -74,9 +74,9 @@ export class EditorController {
   @ApiOkResponse({
     description: 'The editor has been successfully deleted.',
   })
-  @ApiNotFoundResponse({ description: 'Not found' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
   @RequiredRole(Role.EDITORSHIP)

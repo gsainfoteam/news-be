@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { uniqueIndex } from 'drizzle-orm/pg-core';
 import { boolean } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, uuid, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
   id: uuid('id').primaryKey(),
@@ -41,3 +41,27 @@ export const editor = pgTable(
       .where(sql`${table.deletedAt} IS NULL`),
   ],
 );
+
+export const article = pgTable('article', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  imageUrls: text('image_urls').array().notNull(),
+  views: serial('views').default(0).notNull(),
+  editorId: uuid('editor_id')
+    .notNull()
+    .references(() => editor.id),
+  categoryId: serial('category_id')
+    .notNull()
+    .references(() => category.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
+});
+
+export const category = pgTable('category', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
