@@ -46,7 +46,7 @@ export const article = pgTable('article', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
   content: text('content').notNull(),
-  imageUrls: text('image_urls').array().notNull(),
+  imageKeys: text('image_keys').array().notNull(),
   views: serial('views').default(0).notNull(),
   editorId: uuid('editor_id')
     .notNull()

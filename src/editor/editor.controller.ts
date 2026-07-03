@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Param,
   ParseUUIDPipe,
@@ -24,8 +23,8 @@ import { RegisterEditorsDto } from './dto/req/register-editors.dto';
 import { RequiredRole } from './decorator/role.decorator';
 import { Role } from 'src/user/enum/role.enum';
 import { EditorDto } from './dto/res/editor.dto';
-import { GetUser } from 'src/user/decorator/get-user.decorator';
-import { UserEntity } from '@lib/drizzle';
+import { GetEditor } from './decorator/get-editor.decorator';
+import { EditorEntity } from '@lib/drizzle';
 
 @Controller('editor')
 export class EditorController {
@@ -101,14 +100,9 @@ export class EditorController {
   @UseGuards(EditorGuard)
   @Post(':id/editorship')
   async transferEditorship(
-    @GetUser() user: UserEntity,
+    @GetEditor() editor: EditorEntity,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
-    const curEditorship = await this.editorService.findEditorByEmail(
-      user.email,
-    );
-    if (!curEditorship || !curEditorship.isEditorship)
-      throw new ForbiddenException('Current user is not an editorship');
-    await this.editorService.transferEditorship(curEditorship.id, id);
+    await this.editorService.transferEditorship(editor.id, id);
   }
 }
