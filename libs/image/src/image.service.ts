@@ -24,7 +24,7 @@ export class ImageService {
         ),
       },
     });
-    this.s3Url = `https://s3.${this.configService.getOrThrow<string>('AWS_S3_REGION')}.amazonaws.com/${this.configService.getOrThrow<string>('AWS_S3_BUCKET_NAME')}/`;
+    this.s3Url = `https://s3.${this.configService.getOrThrow<string>('AWS_REGION')}.amazonaws.com/${this.configService.getOrThrow<string>('AWS_S3_BUCKET')}/`;
   }
 
   getUrl(key: string): string {

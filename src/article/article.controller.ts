@@ -22,17 +22,19 @@ import { CreateArticleDto } from './dto/req/create-article.dto';
 import { EditorGuard } from 'src/editor/guard/editor.guard';
 import { GetEditor } from 'src/editor/decorator/get-editor.decorator';
 import { EditorEntity } from '@lib/drizzle';
+import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
+import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   @ApiOperation({
-    summary: 'Get Article',
-    description: 'Retrieve an article by its ID.',
+    summary: 'Create Article',
+    description: 'Create a new article.',
   })
   @ApiOkResponse({
-    description: 'The article has been successfully retrieved.',
+    description: 'The article has been successfully created.',
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
@@ -43,8 +45,29 @@ export class ArticleController {
   async createArticle(
     @GetEditor() editor: EditorEntity,
     @Body() body: CreateArticleDto,
-  ): Promise<void> {
-    await this.articleService.createArticle(editor.id, body);
+  ): Promise<ArticleDto> {
+    return await this.articleService.createArticle(editor.id, body);
+  }
+
+  @ApiOperation({
+    summary: 'Get Upload URL',
+    description:
+      'Retrieve a presigned URL and public URL for uploading an article image.',
+  })
+  @ApiOkResponse({
+    description:
+      'The presigned URL and public URL have been successfully retrieved.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(EditorGuard)
+  @Post('image')
+  async getUploadUrl(
+    @Body() body: CreatePresignedUrlDto,
+  ): Promise<UploadUrlInfoDto> {
+    return await this.articleService.getUploadUrl(body);
   }
 
   @ApiOperation({
