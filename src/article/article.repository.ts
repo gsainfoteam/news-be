@@ -21,7 +21,7 @@ export class ArticleRepository {
   ORDER BY ...
   */
   async getArticles(query: SearchArticlesDto): Promise<ArticleEntity[]> {
-    const { search, category, sort } = query;
+    const { offset, limit, search, category, sort } = query;
 
     const whereConditions: (SQL | undefined)[] = [];
     if (search)
@@ -43,7 +43,9 @@ export class ArticleRepository {
       .select()
       .from(article)
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
-      .orderBy(orderClause);
+      .orderBy(orderClause)
+      .offset(offset)
+      .limit(limit);
   }
 
   /*
