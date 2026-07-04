@@ -2,9 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ArticleEntity, DrizzleService, existOrThrow } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
 import { article } from 'drizzle/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, ilike, and, or, desc, arrayContains, SQL } from 'drizzle-orm';
 import { CreateArticleDto } from './dto/req/create-article.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
+import { SearchArticlesDto } from './dto/req/search-articles.dto';
+import { ArticleSort } from './enum/article-sort.enum';
 
 @Loggable()
 @Injectable()
@@ -12,6 +14,37 @@ export class ArticleRepository {
   private readonly logger = new Logger(ArticleRepository.name);
 
   constructor(private readonly drizzleService: DrizzleService) {}
+
+  /*
+  SELECT * FROM article
+  WHERE ...
+  ORDER BY ...
+  */
+  async getArticles(query: SearchArticlesDto): Promise<ArticleEntity[]> {
+    const { search, category, sort } = query;
+
+    const whereConditions: (SQL | undefined)[] = [];
+    if (search)
+      whereConditions.push(
+        or(
+          ilike(article.title, `%${search}%`),
+          ilike(article.content, `%${search}%`),
+        ),
+      );
+    if (category)
+      whereConditions.push(arrayContains(article.categories, [category]));
+
+    let orderClause: SQL;
+    if (sort === ArticleSort.MOST_POPULAR) orderClause = desc(article.views);
+    else if (sort === ArticleSort.RANDOM) orderClause = sql`RANDOM()`;
+    else orderClause = desc(article.createdAt);
+
+    return await this.drizzleService.db
+      .select()
+      .from(article)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(orderClause);
+  }
 
   /*
   INSERT INTO article (title, content, image_keys, editor_id, categories)

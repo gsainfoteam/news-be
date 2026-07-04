@@ -29,6 +29,8 @@ export class CreateArticleDto {
   @ApiProperty({
     description: 'categories',
     example: [Category.SOCIETY],
+    enum: Category,
+    isArray: true,
   })
   @IsArray()
   @IsEnum(Category, { each: true })

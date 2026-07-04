@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -27,10 +28,24 @@ import { EditorEntity } from '@lib/drizzle';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
+import { SearchArticlesDto } from './dto/req/search-articles.dto';
 
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
+
+  @ApiOperation({
+    summary: 'Get Articles List',
+    description: 'Retrieve a list of articles.',
+  })
+  @ApiOkResponse({
+    description: 'The articles have been successfully retrieved.',
+  })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @Get()
+  async getArticles(@Query() query: SearchArticlesDto): Promise<ArticleDto[]> {
+    return await this.articleService.getArticles(query);
+  }
 
   @ApiOperation({
     summary: 'Create Article',
@@ -81,8 +96,8 @@ export class ArticleController {
   })
   @ApiOkResponse({
     description: 'The article has been successfully retrieved.',
+    type: ArticleDto,
   })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @Get(':id')

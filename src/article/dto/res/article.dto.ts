@@ -1,4 +1,4 @@
-import { ArticleEntity } from '@lib/drizzle';
+import { ArticleEntity, Category } from '@lib/drizzle';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 
@@ -40,11 +40,13 @@ export class ArticleDto {
   editorId!: string;
 
   @ApiProperty({
-    description: 'category id',
-    example: 1,
+    description: 'categories',
+    example: [Category.SOCIETY],
+    enum: Category,
+    isArray: true,
   })
   @Expose()
-  categoryId!: number;
+  categories!: Category[];
 
   @ApiProperty({
     description: 'created at',

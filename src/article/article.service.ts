@@ -7,6 +7,7 @@ import * as crypto from 'crypto';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { ImageService } from '@lib/image';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
+import { SearchArticlesDto } from './dto/req/search-articles.dto';
 
 @Injectable()
 export class ArticleService {
@@ -14,6 +15,11 @@ export class ArticleService {
     private readonly articleRepository: ArticleRepository,
     private readonly imageService: ImageService,
   ) {}
+
+  async getArticles(query: SearchArticlesDto): Promise<ArticleDto[]> {
+    const articles = await this.articleRepository.getArticles(query);
+    return articles.map((article) => new ArticleDto(article));
+  }
 
   async createArticle(
     editorId: string,
