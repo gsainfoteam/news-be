@@ -49,7 +49,7 @@ export class ArticleController {
 
   @ApiOperation({
     summary: 'Create Article',
-    description: 'Create a new article.',
+    description: '[Author: Editor] Create a new article.',
   })
   @ApiOkResponse({
     description: 'The article has been successfully created.',
@@ -71,7 +71,7 @@ export class ArticleController {
   @ApiOperation({
     summary: 'Get Upload URL',
     description:
-      'Retrieve a presigned URL and public URL for uploading an article image.',
+      '[Author: Editor] Retrieve a presigned URL and public URL for uploading an article image.',
   })
   @ApiOkResponse({
     description:
@@ -107,7 +107,7 @@ export class ArticleController {
 
   @ApiOperation({
     summary: 'Update Article',
-    description: 'Update an existing article.',
+    description: '[Author: Editor] Update an existing article.',
   })
   @ApiOkResponse({
     description: 'The article has been successfully updated.',
@@ -129,7 +129,7 @@ export class ArticleController {
 
   @ApiOperation({
     summary: 'Delete Article',
-    description: 'Delete an existing article.',
+    description: '[Author: Editor] Delete an existing article.',
   })
   @ApiOkResponse({
     description: 'The article has been successfully deleted.',

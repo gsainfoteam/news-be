@@ -32,7 +32,8 @@ export class EditorController {
 
   @ApiOperation({
     summary: 'Get Current Editor Profile',
-    description: 'Retrieve the profile of the currently authenticated editor.',
+    description:
+      '[Author: Editor] Retrieve the profile of the currently authenticated editor.',
   })
   @ApiOkResponse({
     type: [EditorDto],
@@ -50,7 +51,7 @@ export class EditorController {
 
   @ApiOperation({
     summary: 'Register Editors',
-    description: 'Register a new editor.',
+    description: '[Author: Editorship] Register a new editor.',
   })
   @ApiOkResponse({
     description: 'The editor has been successfully registered.',
@@ -68,7 +69,8 @@ export class EditorController {
 
   @ApiOperation({
     summary: 'Delete Editor',
-    description: 'Soft delete an editor by recording the deletedAt timestamp.',
+    description:
+      '[Author: Editorship] Soft delete an editor by recording the deletedAt timestamp.',
   })
   @ApiOkResponse({
     description: 'The editor has been successfully deleted.',
@@ -87,7 +89,8 @@ export class EditorController {
 
   @ApiOperation({
     summary: 'Transfer Editorship',
-    description: 'Transfer editorship to a different user.',
+    description:
+      '[Author: Editorship] Transfer editorship to a different user.',
   })
   @ApiOkResponse({
     description: 'The editorship has been successfully transferred.',
