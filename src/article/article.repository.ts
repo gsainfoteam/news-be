@@ -60,4 +60,19 @@ export class ArticleRepository {
       .returning()
       .then(existOrThrow('Article not found'));
   }
+
+  /*
+  UPDATE article
+  SET deleted_at = CURRENT_TIMESTAMP
+  WHERE id = id
+  RETURNING *;
+  */
+  async deleteArticle(id: number): Promise<void> {
+    await this.drizzleService.db
+      .update(article)
+      .set({ deletedAt: new Date() })
+      .where(eq(article.id, id))
+      .returning()
+      .then(existOrThrow('Article not found'));
+  }
 }

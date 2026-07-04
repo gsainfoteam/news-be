@@ -52,4 +52,8 @@ export class ArticleService {
     const article = await this.articleRepository.updateArticle(id, body);
     return new ArticleDto(article);
   }
+
+  async deleteArticle(id: number): Promise<void> {
+    await this.articleRepository.deleteArticle(id);
+  }
 }

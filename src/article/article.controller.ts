@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -37,6 +38,7 @@ export class ArticleController {
   })
   @ApiOkResponse({
     description: 'The article has been successfully created.',
+    type: ArticleDto,
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
@@ -59,6 +61,7 @@ export class ArticleController {
   @ApiOkResponse({
     description:
       'The presigned URL and public URL have been successfully retrieved.',
+    type: UploadUrlInfoDto,
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
@@ -93,6 +96,7 @@ export class ArticleController {
   })
   @ApiOkResponse({
     description: 'The article has been successfully updated.',
+    type: ArticleDto,
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
@@ -106,5 +110,23 @@ export class ArticleController {
     @Body() body: UpdateArticleDto,
   ): Promise<ArticleDto> {
     return await this.articleService.updateArticle(id, body);
+  }
+
+  @ApiOperation({
+    summary: 'Delete Article',
+    description: 'Delete an existing article.',
+  })
+  @ApiOkResponse({
+    description: 'The article has been successfully deleted.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiNotFoundResponse({ description: 'Not found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(EditorGuard)
+  @Delete(':id')
+  async deleteArticle(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.articleService.deleteArticle(id);
   }
 }

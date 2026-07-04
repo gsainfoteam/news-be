@@ -26,14 +26,6 @@ export class ArticleDto {
   content!: string;
 
   @ApiProperty({
-    description: 'image urls',
-    example: ['https://.../image1.jpg', 'https://.../image2.jpg'],
-    type: [String],
-  })
-  @Expose()
-  imageUrls!: string[];
-
-  @ApiProperty({
     description: 'views',
     example: 100,
   })
