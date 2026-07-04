@@ -4,6 +4,7 @@ import { Loggable } from '@lib/logger';
 import { article } from 'drizzle/schema';
 import { eq, sql } from 'drizzle-orm';
 import { CreateArticleDto } from './dto/req/create-article.dto';
+import { UpdateArticleDto } from './dto/req/update-article.dto';
 
 @Loggable()
 @Injectable()
@@ -13,8 +14,8 @@ export class ArticleRepository {
   constructor(private readonly drizzleService: DrizzleService) {}
 
   /*
-  INSERT INTO article (title, content, image_keys, editor_id, category_id)
-  VALUES (title, content, image_keys, editor_id, category_id);
+  INSERT INTO article (title, content, image_keys, editor_id, categories)
+  VALUES (title, content, image_keys, editor_id, categories);
   */
   async createArticle(
     editorId: string,
@@ -37,6 +38,24 @@ export class ArticleRepository {
     return await this.drizzleService.db
       .update(article)
       .set({ views: sql`${article.views} + 1` })
+      .where(eq(article.id, id))
+      .returning()
+      .then(existOrThrow('Article not found'));
+  }
+
+  /*
+  UPDATE article
+  SET title = title, content = content, image_keys = image_keys, categories = categories
+  WHERE id = id
+  RETURNING *;
+  */
+  async updateArticle(
+    id: number,
+    body: UpdateArticleDto,
+  ): Promise<ArticleEntity> {
+    return await this.drizzleService.db
+      .update(article)
+      .set({ ...body, updatedAt: new Date() })
       .where(eq(article.id, id))
       .returning()
       .then(existOrThrow('Article not found'));

@@ -1,0 +1,17 @@
+export enum Category {
+  CAMPUS = 'CAMPUS', // 대학
+  SOCIETY = 'SOCIETY', // 사회
+  ACADEMIC_RESEARCH = 'ACADEMIC_RESEARCH', // 학술·연구
+  ACADEMIC = 'ACADEMIC', // 학술
+  RESEARCH = 'RESEARCH', // 연구
+  CULTURE = 'CULTURE', // 문화
+  PLANNING_SPECIAL = 'PLANNING_SPECIAL', // 기획·특집
+  PLANNING = 'PLANNING', // 기획
+  SPECIAL = 'SPECIAL', // 특집
+  REPORTAGE = 'REPORTAGE', // 현장르포
+  OPINION = 'OPINION', // 오피니언
+  INTERNAL_COLUMN = 'INTERNAL_COLUMN', // 내부 칼럼
+  EXTERNAL_COLUMN = 'EXTERNAL_COLUMN', // 외부 칼럼
+  READERS_COMMITTEE = 'READERS_COMMITTEE', // 독자자문위원회
+  CARTOON = 'CARTOON', // 4컷 만화/만평
+}

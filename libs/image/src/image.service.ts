@@ -41,7 +41,7 @@ export class ImageService {
     return getSignedUrl(this.s3Client, command, { expiresIn });
   }
 
-  async verifyFileExists(key: string): Promise<boolean> {
+  async verifyFileExist(key: string): Promise<boolean> {
     const command = new HeadObjectCommand({
       Bucket: this.configService.getOrThrow<string>('AWS_S3_BUCKET'),
       Key: key,

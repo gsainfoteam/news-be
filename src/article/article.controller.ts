@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -24,6 +25,7 @@ import { GetEditor } from 'src/editor/decorator/get-editor.decorator';
 import { EditorEntity } from '@lib/drizzle';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
+import { UpdateArticleDto } from './dto/req/update-article.dto';
 
 @Controller('article')
 export class ArticleController {
@@ -78,11 +80,31 @@ export class ArticleController {
     description: 'The article has been successfully retrieved.',
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @Get(':id')
   async getArticle(@Param('id', ParseIntPipe) id: number): Promise<ArticleDto> {
     return await this.articleService.getArticle(id);
+  }
+
+  @ApiOperation({
+    summary: 'Update Article',
+    description: 'Update an existing article.',
+  })
+  @ApiOkResponse({
+    description: 'The article has been successfully updated.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiNotFoundResponse({ description: 'Not found' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(EditorGuard)
+  @Patch(':id')
+  async updateArticle(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateArticleDto,
+  ): Promise<ArticleDto> {
+    return await this.articleService.updateArticle(id, body);
   }
 }

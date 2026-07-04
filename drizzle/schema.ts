@@ -1,7 +1,16 @@
+import { Category } from '../libs/drizzle/src/enum';
 import { sql } from 'drizzle-orm';
+import { pgEnum } from 'drizzle-orm/pg-core';
 import { uniqueIndex } from 'drizzle-orm/pg-core';
 import { boolean } from 'drizzle-orm/pg-core';
-import { pgTable, serial, uuid, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  serial,
+  uuid,
+  text,
+  timestamp,
+  integer,
+} from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
   id: uuid('id').primaryKey(),
@@ -42,26 +51,22 @@ export const editor = pgTable(
   ],
 );
 
+export const category = pgEnum(
+  'category',
+  Object.values(Category) as [string, ...string[]],
+);
+
 export const article = pgTable('article', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
   content: text('content').notNull(),
-  imageKeys: text('image_keys').array().notNull(),
-  views: serial('views').default(0).notNull(),
+  imageKeys: text('image_keys').array(),
+  views: integer('views').default(0).notNull(),
+  categories: category('categories').array().$type<Category[]>().notNull(),
   editorId: uuid('editor_id')
     .notNull()
     .references(() => editor.id),
-  categoryId: serial('category_id')
-    .notNull()
-    .references(() => category.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
-});
-
-export const category = pgTable('category', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

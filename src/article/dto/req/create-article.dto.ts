@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString } from 'class-validator';
+import { Category } from '@lib/drizzle';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CreateArticleDto {
   @ApiProperty({
@@ -16,19 +17,20 @@ export class CreateArticleDto {
   @IsString()
   content!: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'image keys',
     example: ['image1.jpg', 'image2.jpg'],
-    type: [String],
   })
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  imageKeys!: string[];
+  imageKeys?: string[];
 
   @ApiProperty({
-    description: 'category id',
-    example: 1,
+    description: 'categories',
+    example: [Category.SOCIETY],
   })
-  @IsNumber()
-  categoryId!: number;
+  @IsArray()
+  @IsEnum(Category, { each: true })
+  categories!: Category[];
 }

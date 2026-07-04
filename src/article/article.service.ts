@@ -6,6 +6,7 @@ import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import * as crypto from 'crypto';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { ImageService } from '@lib/image';
+import { UpdateArticleDto } from './dto/req/update-article.dto';
 
 @Injectable()
 export class ArticleService {
@@ -18,6 +19,10 @@ export class ArticleService {
     editorId: string,
     body: CreateArticleDto,
   ): Promise<ArticleDto> {
+    if (body.imageKeys)
+      for (const key of body.imageKeys)
+        await this.imageService.verifyFileExist(key);
+
     const article = await this.articleRepository.createArticle(editorId, body);
     return new ArticleDto(article);
   }
@@ -36,6 +41,15 @@ export class ArticleService {
 
   async getArticle(id: number): Promise<ArticleDto> {
     const article = await this.articleRepository.getArticle(id);
+    return new ArticleDto(article);
+  }
+
+  async updateArticle(id: number, body: UpdateArticleDto): Promise<ArticleDto> {
+    if (body.imageKeys)
+      for (const key of body.imageKeys)
+        await this.imageService.verifyFileExist(key);
+
+    const article = await this.articleRepository.updateArticle(id, body);
     return new ArticleDto(article);
   }
 }
