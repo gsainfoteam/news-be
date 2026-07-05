@@ -1,14 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayMinSize, IsArray, IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 
 export class RegisterEditorsDto {
   @ApiProperty({
-    description: 'List of editor emails to register',
-    example: ['editor1@example.com', 'editor2@example.com'],
+    description: 'The email address of the editor to register',
+    example: 'editor@example.com',
   })
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsString({ each: true })
-  @IsEmail({}, { each: true })
-  emails!: string[];
+  @IsString()
+  @IsEmail({})
+  email!: string;
+
+  @ApiProperty({
+    description: 'The name of the editor to register',
+    example: 'Editor Name',
+  })
+  @IsString()
+  name!: string;
 }

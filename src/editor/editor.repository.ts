@@ -7,6 +7,7 @@ import {
 import { Injectable } from '@nestjs/common';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { editor, user } from 'drizzle/schema';
+import { RegisterEditorsDto } from './dto/req/register-editors.dto';
 
 @Injectable()
 export class EditorRepository {
@@ -28,10 +29,12 @@ export class EditorRepository {
   INSERT INTO editor (email)
   VALUES (emails);
   */
-  async registerEditors(emails: string[]): Promise<void> {
+  async registerEditors(editors: RegisterEditorsDto[]): Promise<void> {
     await this.drizzleService.db
       .insert(editor)
-      .values(emails.map((email) => ({ email })));
+      .values(
+        editors.map((editor) => ({ email: editor.email, name: editor.name })),
+      );
   }
 
   /*

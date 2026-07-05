@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Post,
   UseGuards,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -16,6 +17,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
+  ApiBody,
 } from '@nestjs/swagger';
 import { EditorGuard } from './guard/editor.guard';
 import { EditorService } from './editor.service';
@@ -53,6 +55,7 @@ export class EditorController {
     summary: 'Register Editors',
     description: '[Author: Editorship] Register a new editor.',
   })
+  @ApiBody({ type: [RegisterEditorsDto] })
   @ApiOkResponse({
     description: 'The editor has been successfully registered.',
   })
@@ -63,8 +66,11 @@ export class EditorController {
   @RequiredRole(Role.EDITORSHIP)
   @UseGuards(EditorGuard)
   @Post()
-  async registerEditors(@Body() { emails }: RegisterEditorsDto): Promise<void> {
-    await this.editorService.registerEditors(emails);
+  async registerEditors(
+    @Body(new ParseArrayPipe({ items: RegisterEditorsDto }))
+    body: RegisterEditorsDto[],
+  ): Promise<void> {
+    await this.editorService.registerEditors(body);
   }
 
   @ApiOperation({
