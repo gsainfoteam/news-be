@@ -34,11 +34,25 @@ export class ArticleService {
   }
 
   async getUploadUrl(body: CreatePresignedUrlDto): Promise<UploadUrlInfoDto> {
-    const key = `articles/${new Date().getDate()}/${crypto.randomBytes(16).toString('base64url')}-${body.fileName}.webp`;
+    const key = `articles/${new Date().toISOString().split('T')[0]}/${crypto.randomBytes(16).toString('base64url')}-${body.fileName}`;
+    const ext = body.fileName.split('.').pop()?.toLowerCase();
+
+    let contentType = 'application/octet-stream';
+    if (ext === 'png') {
+      contentType = 'image/png';
+    } else if (ext === 'jpg' || ext === 'jpeg') {
+      contentType = 'image/jpeg';
+    } else if (ext === 'gif') {
+      contentType = 'image/gif';
+    } else if (ext === 'webp') {
+      contentType = 'image/webp';
+    }
+
     return {
       uploadUrl: await this.imageService.createPresignedUrl(
         key,
         body.contentLength,
+        contentType,
       ),
       publicUrl: this.imageService.getUrl(key),
       key,

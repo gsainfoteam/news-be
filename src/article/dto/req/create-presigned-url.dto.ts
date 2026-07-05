@@ -1,12 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNumber, IsString, Min } from 'class-validator';
+import { IsInt, IsNumber, IsString, Matches, Min } from 'class-validator';
 
 export class CreatePresignedUrlDto {
   @ApiProperty({
-    description: 'File name of the image to be uploaded',
-    example: 'image',
+    description:
+      'File name of the image to be uploaded (only letters, numbers, hyphens, underscores, and dots allowed)',
+    example: 'image_1.png',
   })
   @IsString()
+  @Matches(/^[a-zA-Z0-9_.-]+$/, {
+    message:
+      'fileName must contain only letters, numbers, hyphens, underscores, and dots',
+  })
   fileName!: string;
 
   @ApiProperty({

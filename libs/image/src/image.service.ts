@@ -31,11 +31,16 @@ export class ImageService {
     return `${this.s3Url}${key}`;
   }
 
-  async createPresignedUrl(key: string, length: number): Promise<string> {
+  async createPresignedUrl(
+    key: string,
+    length: number,
+    contentType: string,
+  ): Promise<string> {
     const command = new PutObjectCommand({
       Bucket: this.configService.getOrThrow<string>('AWS_S3_BUCKET'),
       Key: key,
       ContentLength: length,
+      ContentType: contentType,
     });
     const expiresIn = 5 * 60; // 5 minutes
     return getSignedUrl(this.s3Client, command, { expiresIn });

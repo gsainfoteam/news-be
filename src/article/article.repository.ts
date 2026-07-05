@@ -2,7 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ArticleEntity, DrizzleService, existOrThrow } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
 import { article } from 'drizzle/schema';
-import { eq, sql, ilike, and, or, desc, arrayContains, SQL } from 'drizzle-orm';
+import {
+  eq,
+  sql,
+  ilike,
+  and,
+  or,
+  desc,
+  arrayContains,
+  SQL,
+  isNull,
+} from 'drizzle-orm';
 import { CreateArticleDto } from './dto/req/create-article.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
@@ -23,7 +33,7 @@ export class ArticleRepository {
   async getArticles(query: SearchArticlesDto): Promise<ArticleEntity[]> {
     const { offset, limit, search, category, sort } = query;
 
-    const whereConditions: (SQL | undefined)[] = [];
+    const whereConditions: (SQL | undefined)[] = [isNull(article.deletedAt)];
     if (search)
       whereConditions.push(
         or(
@@ -73,7 +83,7 @@ export class ArticleRepository {
     return await this.drizzleService.db
       .update(article)
       .set({ views: sql`${article.views} + 1` })
-      .where(eq(article.id, id))
+      .where(and(eq(article.id, id), isNull(article.deletedAt)))
       .returning()
       .then(existOrThrow('Article not found'));
   }
@@ -91,7 +101,7 @@ export class ArticleRepository {
     return await this.drizzleService.db
       .update(article)
       .set({ ...body, updatedAt: new Date() })
-      .where(eq(article.id, id))
+      .where(and(eq(article.id, id), isNull(article.deletedAt)))
       .returning()
       .then(existOrThrow('Article not found'));
   }
@@ -106,7 +116,7 @@ export class ArticleRepository {
     await this.drizzleService.db
       .update(article)
       .set({ deletedAt: new Date() })
-      .where(eq(article.id, id))
+      .where(and(eq(article.id, id), isNull(article.deletedAt)))
       .returning()
       .then(existOrThrow('Article not found'));
   }
