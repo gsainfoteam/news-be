@@ -29,6 +29,7 @@ import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
+import { GetArticleDto } from './dto/req/get-article.dto';
 
 @Controller('article')
 export class ArticleController {
@@ -101,8 +102,11 @@ export class ArticleController {
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @Get(':id')
-  async getArticle(@Param('id', ParseIntPipe) id: number): Promise<ArticleDto> {
-    return await this.articleService.getArticle(id);
+  async getArticle(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: GetArticleDto,
+  ): Promise<ArticleDto> {
+    return await this.articleService.getArticle(id, query);
   }
 
   @ApiOperation({

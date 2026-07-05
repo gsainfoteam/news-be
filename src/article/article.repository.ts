@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ArticleEntity, DrizzleService, existOrThrow } from '@lib/drizzle';
+import {
+  ArticleEntity,
+  DrizzleService,
+  EditorEntity,
+  existOrThrow,
+} from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
-import { article } from 'drizzle/schema';
+import { article, editor } from 'drizzle/schema';
 import {
   eq,
   sql,
@@ -30,7 +35,9 @@ export class ArticleRepository {
   WHERE ...
   ORDER BY ...
   */
-  async getArticles(query: SearchArticlesDto): Promise<ArticleEntity[]> {
+  async getArticles(
+    query: SearchArticlesDto,
+  ): Promise<{ article: ArticleEntity; editor: EditorEntity }[]> {
     const { offset, limit, search, category, sort } = query;
 
     const whereConditions: (SQL | undefined)[] = [isNull(article.deletedAt)];
@@ -52,6 +59,7 @@ export class ArticleRepository {
     return await this.drizzleService.db
       .select()
       .from(article)
+      .innerJoin(editor, eq(article.editorId, editor.id))
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .orderBy(orderClause)
       .offset(offset)
@@ -74,13 +82,27 @@ export class ArticleRepository {
   }
 
   /*
+  SELECT * FROM article
+  WHERE id = id AND deleted_at IS NULL;
+  */
+  async getArticle(
+    id: number,
+  ): Promise<{ article: ArticleEntity; editor: EditorEntity }> {
+    return await this.drizzleService.db
+      .select()
+      .from(article)
+      .innerJoin(editor, eq(article.editorId, editor.id))
+      .where(and(eq(article.id, id), isNull(article.deletedAt)))
+      .then(existOrThrow('Article not found'));
+  }
+
+  /*
   UPDATE article
   SET views = views + 1
   WHERE id = id
-  RETURNING *;
   */
-  async getArticle(id: number): Promise<ArticleEntity> {
-    return await this.drizzleService.db
+  async incrementViews(id: number): Promise<void> {
+    await this.drizzleService.db
       .update(article)
       .set({ views: sql`${article.views} + 1` })
       .where(and(eq(article.id, id), isNull(article.deletedAt)))
@@ -92,13 +114,9 @@ export class ArticleRepository {
   UPDATE article
   SET title = title, content = content, image_keys = image_keys, categories = categories
   WHERE id = id
-  RETURNING *;
   */
-  async updateArticle(
-    id: number,
-    body: UpdateArticleDto,
-  ): Promise<ArticleEntity> {
-    return await this.drizzleService.db
+  async updateArticle(id: number, body: UpdateArticleDto): Promise<void> {
+    await this.drizzleService.db
       .update(article)
       .set({ ...body, updatedAt: new Date() })
       .where(and(eq(article.id, id), isNull(article.deletedAt)))
@@ -110,7 +128,6 @@ export class ArticleRepository {
   UPDATE article
   SET deleted_at = CURRENT_TIMESTAMP
   WHERE id = id
-  RETURNING *;
   */
   async deleteArticle(id: number): Promise<void> {
     await this.drizzleService.db

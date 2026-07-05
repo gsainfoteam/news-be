@@ -8,6 +8,7 @@ import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { ImageService } from '@lib/image';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
+import { GetArticleDto } from './dto/req/get-article.dto';
 
 @Injectable()
 export class ArticleService {
@@ -30,7 +31,8 @@ export class ArticleService {
         await this.imageService.verifyFileExist(key);
 
     const article = await this.articleRepository.createArticle(editorId, body);
-    return new ArticleDto(article);
+    const result = await this.articleRepository.getArticle(article.id);
+    return new ArticleDto(result);
   }
 
   async getUploadUrl(body: CreatePresignedUrlDto): Promise<UploadUrlInfoDto> {
@@ -59,7 +61,12 @@ export class ArticleService {
     };
   }
 
-  async getArticle(id: number): Promise<ArticleDto> {
+  async getArticle(
+    id: number,
+    { increaseView }: GetArticleDto,
+  ): Promise<ArticleDto> {
+    if (increaseView) await this.articleRepository.incrementViews(id);
+
     const article = await this.articleRepository.getArticle(id);
     return new ArticleDto(article);
   }
@@ -69,7 +76,8 @@ export class ArticleService {
       for (const key of body.imageKeys)
         await this.imageService.verifyFileExist(key);
 
-    const article = await this.articleRepository.updateArticle(id, body);
+    await this.articleRepository.updateArticle(id, body);
+    const article = await this.articleRepository.getArticle(id);
     return new ArticleDto(article);
   }
 

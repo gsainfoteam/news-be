@@ -1,6 +1,34 @@
-import { ArticleEntity, Category } from '@lib/drizzle';
+import { ArticleEntity, Category, EditorEntity } from '@lib/drizzle';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
+
+@Exclude()
+class EditorInfoDto {
+  @ApiProperty({
+    description: 'id',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @Expose()
+  id!: string;
+
+  @ApiProperty({
+    description: 'email',
+    example: 'editor@example.com',
+  })
+  @Expose()
+  email!: string;
+
+  @ApiProperty({
+    description: 'name',
+    example: 'Editor Name',
+  })
+  @Expose()
+  name!: string;
+
+  constructor(editor: EditorEntity) {
+    Object.assign(this, editor);
+  }
+}
 
 @Exclude()
 export class ArticleDto {
@@ -33,13 +61,6 @@ export class ArticleDto {
   views!: number;
 
   @ApiProperty({
-    description: 'editor id',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @Expose()
-  editorId!: string;
-
-  @ApiProperty({
     description: 'categories',
     example: [Category.SOCIETY],
     enum: Category,
@@ -62,7 +83,22 @@ export class ArticleDto {
   @Expose()
   updatedAt!: Date;
 
-  constructor(article: ArticleEntity) {
+  @ApiProperty({
+    description: 'deleted at',
+    example: '2026-01-01T00:00:00.000Z',
+    nullable: true,
+  })
+  @Expose()
+  editor!: EditorInfoDto;
+
+  constructor({
+    article,
+    editor,
+  }: {
+    article: ArticleEntity;
+    editor: EditorEntity;
+  }) {
     Object.assign(this, article);
+    this.editor = new EditorInfoDto(editor);
   }
 }

@@ -39,6 +39,7 @@ export const editor = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     email: text('email').notNull().unique(),
+    name: text('name').notNull(),
     isEditorship: boolean('is_editorship').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
