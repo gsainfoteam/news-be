@@ -84,9 +84,7 @@ export class ArticleDto {
   updatedAt!: Date;
 
   @ApiProperty({
-    description: 'deleted at',
-    example: '2026-01-01T00:00:00.000Z',
-    nullable: true,
+    description: 'editor information',
   })
   @Expose()
   editor!: EditorInfoDto;
