@@ -9,6 +9,7 @@ import { ImageService } from '@lib/image';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
 import { GetArticleDto } from './dto/req/get-article.dto';
+import { ArticleListDto } from './dto/res/article-list.dto';
 
 @Injectable()
 export class ArticleService {
@@ -17,18 +18,22 @@ export class ArticleService {
     private readonly imageService: ImageService,
   ) {}
 
-  async getArticles(query: SearchArticlesDto): Promise<ArticleDto[]> {
-    const articles = await this.articleRepository.getArticles(query);
-    return articles.map((article) => new ArticleDto(article));
+  async getArticles(query: SearchArticlesDto): Promise<ArticleListDto> {
+    const [articles, count] = await Promise.all([
+      this.articleRepository.getArticles(query),
+      this.articleRepository.countArticles(query),
+    ]);
+    return new ArticleListDto(articles, count);
   }
-
   async createArticle(
     editorId: string,
     body: CreateArticleDto,
   ): Promise<ArticleDto> {
-    if (body.imageKeys)
-      for (const key of body.imageKeys)
-        await this.imageService.verifyFileExist(key);
+    if (body.imageKeys) {
+      await Promise.all(
+        body.imageKeys.map((key) => this.imageService.verifyFileExist(key)),
+      );
+    }
 
     const article = await this.articleRepository.createArticle(editorId, body);
     const result = await this.articleRepository.getArticle(article.id);
@@ -72,9 +77,11 @@ export class ArticleService {
   }
 
   async updateArticle(id: number, body: UpdateArticleDto): Promise<ArticleDto> {
-    if (body.imageKeys)
-      for (const key of body.imageKeys)
-        await this.imageService.verifyFileExist(key);
+    if (body.imageKeys) {
+      await Promise.all(
+        body.imageKeys.map((key) => this.imageService.verifyFileExist(key)),
+      );
+    }
 
     await this.articleRepository.updateArticle(id, body);
     const article = await this.articleRepository.getArticle(id);

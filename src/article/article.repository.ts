@@ -67,6 +67,31 @@ export class ArticleRepository {
   }
 
   /*
+  SELECT COUNT(*) FROM article
+  WHERE ...
+  */
+  async countArticles(query: SearchArticlesDto): Promise<number> {
+    const { search, category } = query;
+
+    const whereConditions: (SQL | undefined)[] = [isNull(article.deletedAt)];
+    if (search)
+      whereConditions.push(
+        or(
+          ilike(article.title, `%${search}%`),
+          ilike(article.content, `%${search}%`),
+        ),
+      );
+    if (category)
+      whereConditions.push(arrayContains(article.categories, [category]));
+
+    return await this.drizzleService.db
+      .select({ count: sql<number>`count(*)` })
+      .from(article)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .then((result) => result[0].count);
+  }
+
+  /*
   INSERT INTO article (title, content, image_keys, editor_id, categories)
   VALUES (title, content, image_keys, editor_id, categories);
   */

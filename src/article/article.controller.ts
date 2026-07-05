@@ -30,6 +30,7 @@ import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
 import { GetArticleDto } from './dto/req/get-article.dto';
+import { ArticleListDto } from './dto/res/article-list.dto';
 
 @Controller('article')
 export class ArticleController {
@@ -41,10 +42,13 @@ export class ArticleController {
   })
   @ApiOkResponse({
     description: 'The articles have been successfully retrieved.',
+    type: ArticleListDto,
   })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @Get()
-  async getArticles(@Query() query: SearchArticlesDto): Promise<ArticleDto[]> {
+  async getArticles(
+    @Query() query: SearchArticlesDto,
+  ): Promise<ArticleListDto> {
     return await this.articleService.getArticles(query);
   }
 
