@@ -8,6 +8,13 @@
       "when": 1782654284499,
       "tag": "0000_user,refresh-token,editor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783270732273,
+      "tag": "0001_article,category",
+      "breakpoints": true
     }
   ]
 }
