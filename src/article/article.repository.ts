@@ -38,18 +38,8 @@ export class ArticleRepository {
   async getArticles(
     query: SearchArticlesDto,
   ): Promise<{ article: ArticleEntity; editor: EditorEntity }[]> {
-    const { offset, limit, search, category, sort } = query;
-
-    const whereConditions: (SQL | undefined)[] = [isNull(article.deletedAt)];
-    if (search)
-      whereConditions.push(
-        or(
-          ilike(article.title, `%${search}%`),
-          ilike(article.content, `%${search}%`),
-        ),
-      );
-    if (category)
-      whereConditions.push(arrayContains(article.categories, [category]));
+    const { offset, limit, sort } = query;
+    const whereClause = this.buildWhereClause(query);
 
     let orderClause: SQL;
     if (sort === ArticleSort.MOST_POPULAR) orderClause = desc(article.views);
@@ -60,7 +50,7 @@ export class ArticleRepository {
       .select()
       .from(article)
       .innerJoin(editor, eq(article.editorId, editor.id))
-      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .where(whereClause)
       .orderBy(orderClause)
       .offset(offset)
       .limit(limit);
@@ -71,23 +61,11 @@ export class ArticleRepository {
   WHERE ...
   */
   async countArticles(query: SearchArticlesDto): Promise<number> {
-    const { search, category } = query;
-
-    const whereConditions: (SQL | undefined)[] = [isNull(article.deletedAt)];
-    if (search)
-      whereConditions.push(
-        or(
-          ilike(article.title, `%${search}%`),
-          ilike(article.content, `%${search}%`),
-        ),
-      );
-    if (category)
-      whereConditions.push(arrayContains(article.categories, [category]));
-
+    const whereClause = this.buildWhereClause(query);
     return await this.drizzleService.db
       .select({ count: sql<number>`count(*)` })
       .from(article)
-      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .where(whereClause)
       .then((result) => result[0].count);
   }
 
@@ -161,5 +139,24 @@ export class ArticleRepository {
       .where(and(eq(article.id, id), isNull(article.deletedAt)))
       .returning()
       .then(existOrThrow('Article not found'));
+  }
+
+  private buildWhereClause({
+    search,
+    category,
+  }: SearchArticlesDto): SQL | undefined {
+    const whereConditions: (SQL | undefined)[] = [isNull(article.deletedAt)];
+    if (search) {
+      whereConditions.push(
+        or(
+          ilike(article.title, `%${search}%`),
+          ilike(article.content, `%${search}%`),
+        ),
+      );
+    }
+    if (category) {
+      whereConditions.push(arrayContains(article.categories, [category]));
+    }
+    return and(...whereConditions);
   }
 }
