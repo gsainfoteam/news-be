@@ -6,15 +6,15 @@ import { ArticleDto } from './article.dto';
 @Exclude()
 export class ArticleListDto {
   @ApiProperty({
-    description: 'id',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'List of retrieved articles',
+    type: [ArticleDto],
   })
   @Expose()
   articles!: ArticleDto[];
 
   @ApiProperty({
-    description: 'email',
-    example: 'editor@example.com',
+    description: 'Total number of articles matching the search criteria',
+    example: 42,
   })
   @Expose()
   count: number;
