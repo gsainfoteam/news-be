@@ -1,3 +1,4 @@
+import { inspect } from 'util';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService, MetadataScanner } from '@nestjs/core';
 import type { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
@@ -52,18 +53,38 @@ export class LoggerDecoratorRegister implements OnModuleInit {
             this: unknown,
             ...args: unknown[]
           ): unknown {
+            const argsStr = inspect(args, {
+              depth: 2,
+              colors: false,
+              breakLength: Infinity,
+            });
             logger.log(`Before ${methodName}`);
             const now = Date.now();
-            const result: unknown = (originalMethod as AnyMethod).apply(
-              this,
-              args,
-            );
+
+            let result: unknown;
+            try {
+              result = (originalMethod as AnyMethod).apply(this, args);
+            } catch (error) {
+              logger.error(
+                `Error in ${methodName} with args ${argsStr}: ${error instanceof Error ? error.message : error}`,
+                error instanceof Error ? error.stack : undefined,
+              );
+              throw error;
+            }
 
             if (result instanceof Promise) {
-              return result.then((resolvedResult: unknown) => {
-                logger.log(`After ${methodName} +${Date.now() - now}ms`);
-                return resolvedResult;
-              });
+              return result
+                .then((resolvedResult: unknown) => {
+                  logger.log(`After ${methodName} +${Date.now() - now}ms`);
+                  return resolvedResult;
+                })
+                .catch((error: unknown) => {
+                  logger.error(
+                    `Error in ${methodName} with args ${argsStr}: ${error instanceof Error ? error.message : error}`,
+                    error instanceof Error ? error.stack : undefined,
+                  );
+                  throw error;
+                });
             }
 
             logger.log(`After ${methodName} +${Date.now() - now}ms`);
