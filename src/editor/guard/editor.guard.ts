@@ -34,20 +34,23 @@ export class EditorGuard extends AuthGuard('jwt') {
 
     const request = context.switchToHttp().getRequest<EditorRequest>();
     const user = request.user;
-    if (!user) {
-      return false;
-    }
+    if (!user) return false;
+
     const editor = await this.editorService.findEditorByEmail(user.email);
-    if (!editor) {
-      throw new ForbiddenException('User is not editor');
-    }
+    if (!editor) throw new ForbiddenException('User is not editor');
+
+    request.editorInfo = editor;
+
     const role = editor.isEditorship ? Role.EDITORSHIP : Role.EDITOR;
+    request.role = role;
+
     const requiredRole = this.reflector.getAllAndOverride<Role>(ROLE_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (requiredRole === Role.EDITORSHIP && requiredRole !== role) return false;
+    if (requiredRole === Role.EDITORSHIP && requiredRole !== role)
+      throw new ForbiddenException('User is not have editorship');
 
     return true;
   }

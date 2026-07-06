@@ -3,6 +3,7 @@ import { EditorRepository } from './editor.repository';
 import { Loggable } from '@lib/logger';
 import { EditorDto } from './dto/res/editor.dto';
 import { EditorEntity } from '@lib/drizzle';
+import { RegisterEditorsDto } from './dto/req/register-editors.dto';
 
 @Loggable()
 @Injectable()
@@ -23,8 +24,8 @@ export class EditorService {
     );
   }
 
-  async registerEditors(emails: string[]): Promise<void> {
-    return await this.editorRepository.registerEditors(emails);
+  async registerEditors(editors: RegisterEditorsDto[]): Promise<void> {
+    return await this.editorRepository.registerEditors(editors);
   }
 
   async deleteEditor(id: string): Promise<void> {

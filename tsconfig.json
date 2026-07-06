@@ -27,7 +27,9 @@
       "@lib/infoteam-account": ["libs/infoteam-account/src"],
       "@lib/infoteam-account/*": ["libs/infoteam-account/src/*"],
       "@lib/logger": ["libs/logger/src"],
-      "@lib/logger/*": ["libs/logger/src/*"]
+      "@lib/logger/*": ["libs/logger/src/*"],
+      "@lib/image": ["libs/image/src"],
+      "@lib/image/*": ["libs/image/src/*"]
     }
   }
 }

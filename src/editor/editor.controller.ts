@@ -2,12 +2,12 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Param,
   ParseUUIDPipe,
   Post,
   UseGuards,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -17,6 +17,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
+  ApiBody,
 } from '@nestjs/swagger';
 import { EditorGuard } from './guard/editor.guard';
 import { EditorService } from './editor.service';
@@ -24,8 +25,8 @@ import { RegisterEditorsDto } from './dto/req/register-editors.dto';
 import { RequiredRole } from './decorator/role.decorator';
 import { Role } from 'src/user/enum/role.enum';
 import { EditorDto } from './dto/res/editor.dto';
-import { GetUser } from 'src/user/decorator/get-user.decorator';
-import { UserEntity } from '@lib/drizzle';
+import { GetEditor } from './decorator/get-editor.decorator';
+import { EditorEntity } from '@lib/drizzle';
 
 @Controller('editor')
 export class EditorController {
@@ -33,7 +34,8 @@ export class EditorController {
 
   @ApiOperation({
     summary: 'Get Current Editor Profile',
-    description: 'Retrieve the profile of the currently authenticated editor.',
+    description:
+      '[Author: Editor] Retrieve the profile of the currently authenticated editor.',
   })
   @ApiOkResponse({
     type: [EditorDto],
@@ -51,8 +53,9 @@ export class EditorController {
 
   @ApiOperation({
     summary: 'Register Editors',
-    description: 'Register a new editor.',
+    description: '[Author: Editorship] Register a new editor.',
   })
+  @ApiBody({ type: [RegisterEditorsDto] })
   @ApiOkResponse({
     description: 'The editor has been successfully registered.',
   })
@@ -63,20 +66,24 @@ export class EditorController {
   @RequiredRole(Role.EDITORSHIP)
   @UseGuards(EditorGuard)
   @Post()
-  async registerEditors(@Body() { emails }: RegisterEditorsDto): Promise<void> {
-    await this.editorService.registerEditors(emails);
+  async registerEditors(
+    @Body(new ParseArrayPipe({ items: RegisterEditorsDto }))
+    body: RegisterEditorsDto[],
+  ): Promise<void> {
+    await this.editorService.registerEditors(body);
   }
 
   @ApiOperation({
     summary: 'Delete Editor',
-    description: 'Soft delete an editor by recording the deletedAt timestamp.',
+    description:
+      '[Author: Editorship] Soft delete an editor by recording the deletedAt timestamp.',
   })
   @ApiOkResponse({
     description: 'The editor has been successfully deleted.',
   })
-  @ApiNotFoundResponse({ description: 'Not found' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
   @RequiredRole(Role.EDITORSHIP)
@@ -88,7 +95,8 @@ export class EditorController {
 
   @ApiOperation({
     summary: 'Transfer Editorship',
-    description: 'Transfer editorship to a different user.',
+    description:
+      '[Author: Editorship] Transfer editorship to a different user.',
   })
   @ApiOkResponse({
     description: 'The editorship has been successfully transferred.',
@@ -101,14 +109,9 @@ export class EditorController {
   @UseGuards(EditorGuard)
   @Post(':id/editorship')
   async transferEditorship(
-    @GetUser() user: UserEntity,
+    @GetEditor() editor: EditorEntity,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
-    const curEditorship = await this.editorService.findEditorByEmail(
-      user.email,
-    );
-    if (!curEditorship || !curEditorship.isEditorship)
-      throw new ForbiddenException('Current user is not an editorship');
-    await this.editorService.transferEditorship(curEditorship.id, id);
+    await this.editorService.transferEditorship(editor.id, id);
   }
 }

@@ -9,6 +9,6 @@ import { EditorGuard } from './guard/editor.guard';
   imports: [DrizzleModule],
   controllers: [EditorController],
   providers: [EditorService, EditorRepository, EditorGuard],
-  exports: [EditorService],
+  exports: [EditorService, EditorGuard],
 })
 export class EditorModule {}
