@@ -1,10 +1,4 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { Catch, ArgumentsHost, HttpStatus, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Response } from 'express';
 
@@ -38,13 +32,13 @@ export class PostgresExceptionFilter extends BaseExceptionFilter {
       switch (exception.code) {
         case '23505': // unique_violation
           status = HttpStatus.CONFLICT;
-          message = exception.detail || 'Duplicate data entry';
+          message = 'Duplicate data entry';
           break;
         case '23503': // foreign_key_violation
         case '23502': // not_null_violation
         case '22P02': // invalid_text_representation
           status = HttpStatus.BAD_REQUEST;
-          message = exception.detail || 'Invalid data relation';
+          message = 'Invalid data relation';
           break;
       }
 
