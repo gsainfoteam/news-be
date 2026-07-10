@@ -1,4 +1,3 @@
-import { inspect } from 'util';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService, MetadataScanner } from '@nestjs/core';
 import type { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
@@ -53,43 +52,6 @@ export class LoggerDecoratorRegister implements OnModuleInit {
             this: unknown,
             ...args: unknown[]
           ): unknown {
-            const isSensitiveMethod =
-              /(login|refresh|logout|register|issueToken)/i.test(methodName);
-            const maskSensitiveData = (data: unknown): unknown => {
-              if (data == null) return data;
-              if (typeof data === 'string') {
-                if (
-                  isSensitiveMethod ||
-                  data.startsWith('Bearer ') ||
-                  data.startsWith('ey')
-                ) {
-                  return '***';
-                }
-                return data;
-              }
-              if (Array.isArray(data)) {
-                return data.map((item) => maskSensitiveData(item));
-              }
-              if (typeof data === 'object') {
-                const masked: Record<string, unknown> = {};
-                for (const [key, value] of Object.entries(data)) {
-                  if (/(password|token|secret|auth)/i.test(key)) {
-                    masked[key] = '***';
-                  } else {
-                    masked[key] = maskSensitiveData(value);
-                  }
-                }
-                return masked;
-              }
-              return data;
-            };
-
-            const maskedArgs = maskSensitiveData(args);
-            const argsStr = inspect(maskedArgs, {
-              depth: 2,
-              colors: false,
-              breakLength: Infinity,
-            });
             logger.log(`Before ${methodName}`);
             const now = Date.now();
 
@@ -98,7 +60,7 @@ export class LoggerDecoratorRegister implements OnModuleInit {
               result = (originalMethod as AnyMethod).apply(this, args);
             } catch (error) {
               logger.error(
-                `Error in ${methodName} with args ${argsStr}: ${error instanceof Error ? error.message : String(error)}`,
+                `Error in ${methodName}: ${error instanceof Error ? error.message : String(error)}`,
                 error instanceof Error ? error.stack : undefined,
               );
               throw error;
@@ -112,7 +74,7 @@ export class LoggerDecoratorRegister implements OnModuleInit {
                 })
                 .catch((error: unknown) => {
                   logger.error(
-                    `Error in ${methodName} with args ${argsStr}: ${error instanceof Error ? error.message : String(error)}`,
+                    `Error in ${methodName}: ${error instanceof Error ? error.message : String(error)}`,
                     error instanceof Error ? error.stack : undefined,
                   );
                   throw error;
