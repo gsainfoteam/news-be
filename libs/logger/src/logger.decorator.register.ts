@@ -54,16 +54,31 @@ export class LoggerDecoratorRegister implements OnModuleInit {
           ): unknown {
             logger.log(`Before ${methodName}`);
             const now = Date.now();
-            const result: unknown = (originalMethod as AnyMethod).apply(
-              this,
-              args,
-            );
+
+            let result: unknown;
+            try {
+              result = (originalMethod as AnyMethod).apply(this, args);
+            } catch (error) {
+              logger.error(
+                `Error in ${methodName}: ${error instanceof Error ? error.message : String(error)}`,
+                error instanceof Error ? error.stack : undefined,
+              );
+              throw error;
+            }
 
             if (result instanceof Promise) {
-              return result.then((resolvedResult: unknown) => {
-                logger.log(`After ${methodName} +${Date.now() - now}ms`);
-                return resolvedResult;
-              });
+              return result
+                .then((resolvedResult: unknown) => {
+                  logger.log(`After ${methodName} +${Date.now() - now}ms`);
+                  return resolvedResult;
+                })
+                .catch((error: unknown) => {
+                  logger.error(
+                    `Error in ${methodName}: ${error instanceof Error ? error.message : String(error)}`,
+                    error instanceof Error ? error.stack : undefined,
+                  );
+                  throw error;
+                });
             }
 
             logger.log(`After ${methodName} +${Date.now() - now}ms`);
