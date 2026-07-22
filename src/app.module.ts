@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { LoggerModule } from '@lib/logger';
 import { EditorModule } from './editor/editor.module';
 import { ArticleModule } from './article/article.module';
+import { CommentModule } from './comment/comment.module';
 import { PostgresExceptionFilter } from '@lib/drizzle';
 
 @Module({
@@ -17,6 +18,7 @@ import { PostgresExceptionFilter } from '@lib/drizzle';
     UserModule,
     EditorModule,
     ArticleModule,
+    CommentModule,
     HealthModule,
   ],
   providers: [

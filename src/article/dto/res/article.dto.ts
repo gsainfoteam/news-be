@@ -1,6 +1,7 @@
 import { ArticleEntity, Category, EditorEntity } from '@lib/drizzle';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
+import { CommentDto } from 'src/comment/dto/res/comment.dto';
 
 @Exclude()
 class EditorInfoDto {
@@ -89,14 +90,24 @@ export class ArticleDto {
   @Expose()
   editor!: EditorInfoDto;
 
+  @ApiProperty({
+    description: 'comments on the article',
+    type: [CommentDto],
+  })
+  @Expose()
+  comments!: CommentDto[];
+
   constructor({
     article,
     editor,
+    comments = [],
   }: {
     article: ArticleEntity;
     editor: EditorEntity;
+    comments?: CommentDto[];
   }) {
     Object.assign(this, article);
     this.editor = new EditorInfoDto(editor);
+    this.comments = comments;
   }
 }
