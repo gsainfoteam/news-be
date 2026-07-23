@@ -5,9 +5,10 @@ import { ArticleRepository } from './article.repository';
 import { DrizzleModule } from '@lib/drizzle';
 import { ImageModule } from '@lib/image';
 import { EditorModule } from 'src/editor/editor.module';
+import { CommentModule } from 'src/comment/comment.module';
 
 @Module({
-  imports: [DrizzleModule, ImageModule, EditorModule],
+  imports: [DrizzleModule, ImageModule, EditorModule, CommentModule],
   controllers: [ArticleController],
   providers: [ArticleService, ArticleRepository],
 })

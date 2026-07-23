@@ -10,12 +10,14 @@ import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
 import { GetArticleDto } from './dto/req/get-article.dto';
 import { ArticleListDto } from './dto/res/article-list.dto';
+import { CommentService } from 'src/comment/comment.service';
 
 @Injectable()
 export class ArticleService {
   constructor(
     private readonly articleRepository: ArticleRepository,
     private readonly imageService: ImageService,
+    private readonly commentService: CommentService,
   ) {}
 
   async getArticles(query: SearchArticlesDto): Promise<ArticleListDto> {
@@ -72,8 +74,11 @@ export class ArticleService {
   ): Promise<ArticleDto> {
     if (increaseView) await this.articleRepository.incrementViews(id);
 
-    const article = await this.articleRepository.getArticle(id);
-    return new ArticleDto(article);
+    const [article, comments] = await Promise.all([
+      this.articleRepository.getArticle(id),
+      this.commentService.getCommentsByArticle(id),
+    ]);
+    return new ArticleDto({ ...article, comments });
   }
 
   async updateArticle(id: number, body: UpdateArticleDto): Promise<ArticleDto> {
