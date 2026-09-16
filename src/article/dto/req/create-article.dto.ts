@@ -10,6 +10,14 @@ export class CreateArticleDto {
   @IsString()
   title!: string;
 
+  @ApiPropertyOptional({
+    description: 'subtitle',
+    example: 'Article Subtitle',
+  })
+  @IsOptional()
+  @IsString()
+  subtitle?: string;
+
   @ApiProperty({
     description: 'content',
     example: 'Article Content',

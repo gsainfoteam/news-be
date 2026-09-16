@@ -1,5 +1,5 @@
 import { ArticleEntity, Category, EditorEntity } from '@lib/drizzle';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 import { CommentDto } from 'src/comment/dto/res/comment.dto';
 
@@ -46,6 +46,15 @@ export class ArticleDto {
   })
   @Expose()
   title!: string;
+
+  @ApiPropertyOptional({
+    description: 'subtitle',
+    type: String,
+    nullable: true,
+    example: 'Article Subtitle',
+  })
+  @Expose()
+  subtitle!: string | null;
 
   @ApiProperty({
     description: 'content',

@@ -61,6 +61,7 @@ export const category = pgEnum(
 export const article = pgTable('article', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
+  subtitle: text('subtitle'),
   content: text('content').notNull(),
   imageKeys: text('image_keys').array(),
   views: integer('views').default(0).notNull(),
