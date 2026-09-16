@@ -2,6 +2,8 @@ import { CommentEntity, UserEntity } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 
+export const DELETED_COMMENT_CONTENT = '삭제된 댓글입니다';
+
 @Exclude()
 class UserInfoDto {
   @ApiProperty({
@@ -55,11 +57,19 @@ export class CommentDto {
   parentId!: number | null;
 
   @ApiProperty({
-    description: 'comment content',
+    description: `comment content. Replaced with "${DELETED_COMMENT_CONTENT}" when isDeleted is true.`,
     example: 'Great article!',
   })
   @Expose()
   content!: string;
+
+  @ApiProperty({
+    description:
+      'true when the comment was deleted but is kept as a placeholder because it still has replies',
+    example: false,
+  })
+  @Expose()
+  isDeleted!: boolean;
 
   @ApiProperty({
     description: 'created at',
@@ -83,6 +93,8 @@ export class CommentDto {
 
   constructor({ comment, user }: { comment: CommentEntity; user: UserEntity }) {
     Object.assign(this, comment);
+    this.isDeleted = comment.deletedAt !== null;
+    this.content = this.isDeleted ? DELETED_COMMENT_CONTENT : comment.content;
     this.user = new UserInfoDto(user);
   }
 }

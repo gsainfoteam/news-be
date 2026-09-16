@@ -92,7 +92,7 @@ export class CommentRepository {
   /*
   SELECT * FROM comment
   INNER JOIN "user" ON comment.user_id = "user".id
-  WHERE comment.article_id = articleId AND comment.deleted_at IS NULL
+  WHERE comment.article_id = articleId
   ORDER BY comment.created_at ASC;
   */
   async getCommentsByArticleId(
@@ -102,7 +102,7 @@ export class CommentRepository {
       .select()
       .from(comment)
       .innerJoin(user, eq(comment.userId, user.id))
-      .where(and(eq(comment.articleId, articleId), isNull(comment.deletedAt)))
+      .where(eq(comment.articleId, articleId))
       .orderBy(asc(comment.createdAt));
   }
 }
