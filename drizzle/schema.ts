@@ -1,6 +1,7 @@
 import { Category } from '../libs/drizzle/src/enum';
 import { sql } from 'drizzle-orm';
 import { pgEnum } from 'drizzle-orm/pg-core';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { uniqueIndex } from 'drizzle-orm/pg-core';
 import { boolean } from 'drizzle-orm/pg-core';
 import {
@@ -80,7 +81,8 @@ export const comment = pgTable('comment', {
   articleId: integer('article_id')
     .notNull()
     .references(() => article.id),
-  comment: text('comment').notNull(),
+  parentId: integer('parent_id').references((): AnyPgColumn => comment.id),
+  content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),

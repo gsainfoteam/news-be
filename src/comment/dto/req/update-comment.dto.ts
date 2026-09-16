@@ -8,5 +8,5 @@ export class UpdateCommentDto {
   })
   @IsString()
   @MinLength(1)
-  comment!: string;
+  content!: string;
 }

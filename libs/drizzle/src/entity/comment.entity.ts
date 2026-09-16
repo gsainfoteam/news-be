@@ -2,7 +2,8 @@ export class CommentEntity {
   id!: number;
   userId!: string;
   articleId!: number;
-  comment!: string;
+  parentId!: number | null;
+  content!: string;
   createdAt!: Date;
   updatedAt!: Date;
   deletedAt!: Date | null;

@@ -47,12 +47,19 @@ export class CommentDto {
   @Expose()
   articleId!: number;
 
+  @ApiPropertyOptional({
+    description: 'parent comment information',
+    example: 1,
+  })
+  @Expose()
+  parentId!: number | null;
+
   @ApiProperty({
     description: 'comment content',
     example: 'Great article!',
   })
   @Expose()
-  comment!: string;
+  content!: string;
 
   @ApiProperty({
     description: 'created at',
