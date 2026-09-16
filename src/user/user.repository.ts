@@ -1,7 +1,7 @@
 import { DrizzleService, existOrThrow, UserEntity } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
 import { Injectable, Logger } from '@nestjs/common';
-import { eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { user } from 'drizzle/schema';
 import { UpdateConsentDto } from './dto/req/update-consent.dto';
 

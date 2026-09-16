@@ -8,6 +8,7 @@ import {
 import { Loggable } from '@lib/logger';
 import { comment, user } from 'drizzle/schema';
 import { and, asc, eq, isNull } from 'drizzle-orm';
+import { CreateCommentDto } from './dto/req/create-comment.dto';
 
 @Loggable()
 @Injectable()
@@ -23,11 +24,11 @@ export class CommentRepository {
   async createComment(
     userId: string,
     articleId: number,
-    content: string,
+    { content, parentId }: CreateCommentDto,
   ): Promise<CommentEntity> {
     return await this.drizzleService.db
       .insert(comment)
-      .values({ userId, articleId, comment: content })
+      .values({ userId, articleId, content, parentId })
       .returning()
       .then(existOrThrow('Failed to create comment'));
   }
@@ -61,7 +62,7 @@ export class CommentRepository {
   ): Promise<void> {
     await this.drizzleService.db
       .update(comment)
-      .set({ comment: content, updatedAt: new Date() })
+      .set({ content, updatedAt: new Date() })
       .where(
         and(
           eq(comment.articleId, articleId),
@@ -91,7 +92,7 @@ export class CommentRepository {
   /*
   SELECT * FROM comment
   INNER JOIN "user" ON comment.user_id = "user".id
-  WHERE comment.article_id = articleId AND comment.deleted_at IS NULL
+  WHERE comment.article_id = articleId
   ORDER BY comment.created_at ASC;
   */
   async getCommentsByArticleId(
@@ -101,7 +102,7 @@ export class CommentRepository {
       .select()
       .from(comment)
       .innerJoin(user, eq(comment.userId, user.id))
-      .where(and(eq(comment.articleId, articleId), isNull(comment.deletedAt)))
+      .where(eq(comment.articleId, articleId))
       .orderBy(asc(comment.createdAt));
   }
 }

@@ -150,6 +150,7 @@ export class ArticleRepository {
       whereConditions.push(
         or(
           ilike(article.title, `%${search}%`),
+          ilike(article.subtitle, `%${search}%`),
           ilike(article.content, `%${search}%`),
         ),
       );

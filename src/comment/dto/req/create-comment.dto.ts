@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateCommentDto {
   @ApiProperty({
@@ -8,5 +8,13 @@ export class CreateCommentDto {
   })
   @IsString()
   @MinLength(1)
-  comment!: string;
+  content!: string;
+
+  @ApiPropertyOptional({
+    description: 'parent comment id for nested comments',
+    example: 1,
+  })
+  @IsOptional()
+  @IsInt()
+  parentId?: number;
 }

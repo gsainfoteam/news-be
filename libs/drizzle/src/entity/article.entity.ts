@@ -3,6 +3,7 @@ import { Category } from '../enum';
 export class ArticleEntity {
   id!: number;
   title!: string;
+  subtitle!: string | null;
   content!: string;
   imageKeys!: string[] | null;
   views!: number;

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -20,12 +21,21 @@ export class CommentService {
   async createComment(
     articleId: number,
     userId: string,
-    { comment }: CreateCommentDto,
+    dto: CreateCommentDto,
   ): Promise<CommentDto> {
+    if (dto.parentId) {
+      const parentComment = await this.commentRepository.getComment(
+        dto.parentId,
+      );
+      if (parentComment.comment.articleId !== articleId)
+        throw new BadRequestException(
+          'Parent comment does not belong to the same article',
+        );
+    }
     const created = await this.commentRepository.createComment(
       userId,
       articleId,
-      comment,
+      dto,
     );
     const result = await this.commentRepository.getComment(created.id);
     return new CommentDto(result);
@@ -35,13 +45,13 @@ export class CommentService {
     articleId: number,
     commentId: number,
     userId: string,
-    { comment }: UpdateCommentDto,
+    { content }: UpdateCommentDto,
   ): Promise<CommentDto> {
     await this.commentRepository.updateComment(
       articleId,
       userId,
       commentId,
-      comment,
+      content,
     );
     const result = await this.commentRepository.getComment(commentId);
     return new CommentDto(result);
