@@ -1,4 +1,3 @@
-import { Injectable, Logger } from '@nestjs/common';
 import {
   ArticleEntity,
   DrizzleService,
@@ -6,7 +5,7 @@ import {
   existOrThrow,
 } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
-import { article, member } from 'drizzle/schema';
+import { article, articleAuthor, member } from 'drizzle/schema';
 import {
   eq,
   sql,
@@ -15,9 +14,11 @@ import {
   or,
   desc,
   arrayContains,
+  inArray,
   SQL,
   isNull,
 } from 'drizzle-orm';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateArticleDto } from './dto/req/create-article.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
@@ -35,9 +36,12 @@ export class ArticleRepository {
   WHERE ...
   ORDER BY ...
   */
-  async getArticles(
-    query: SearchArticlesDto,
-  ): Promise<{ article: ArticleEntity; member: MemberEntity }[]> {
+  async getArticles(query: SearchArticlesDto): Promise<
+    {
+      article: ArticleEntity;
+      authors: MemberEntity[];
+    }[]
+  > {
     const { offset, limit, sort } = query;
     const whereClause = this.buildWhereClause(query);
 
@@ -46,14 +50,22 @@ export class ArticleRepository {
     else if (sort === ArticleSort.RANDOM) orderClause = sql`RANDOM()`;
     else orderClause = desc(article.createdAt);
 
-    return await this.drizzleService.db
+    const articles = await this.drizzleService.db
       .select()
       .from(article)
-      .innerJoin(member, eq(article.memberId, member.id))
       .where(whereClause)
       .orderBy(orderClause)
       .offset(offset)
       .limit(limit);
+
+    const authorsByArticleId = await this.findAuthorsByArticleIds(
+      articles.map((row) => row.id),
+    );
+
+    return articles.map((row) => ({
+      article: row,
+      authors: authorsByArticleId.get(row.id) ?? [],
+    }));
   }
 
   /*
@@ -70,33 +82,52 @@ export class ArticleRepository {
   }
 
   /*
-  INSERT INTO article (title, content, image_keys, member_id, categories)
-  VALUES (title, content, image_keys, member_id, categories);
+  INSERT INTO article (title, subtitle, content, image_keys, categories) VALUES (...);
+  INSERT INTO article_author (article_id, member_id, sort_order) VALUES (...);
   */
-  async createArticle(
-    memberId: string,
-    body: CreateArticleDto,
-  ): Promise<ArticleEntity> {
-    return await this.drizzleService.db
-      .insert(article)
-      .values({ ...body, memberId })
-      .returning()
-      .then(existOrThrow('Failed to create article'));
+  async createArticle({
+    authorIds,
+    ...values
+  }: CreateArticleDto): Promise<ArticleEntity> {
+    return await this.drizzleService.db.transaction(async (tx) => {
+      const created = await tx
+        .insert(article)
+        .values(values)
+        .returning()
+        .then(existOrThrow('Failed to create article'));
+
+      await tx.insert(articleAuthor).values(
+        authorIds.map((memberId, index) => ({
+          articleId: created.id,
+          memberId,
+          sortOrder: index,
+        })),
+      );
+
+      return created;
+    });
   }
 
   /*
   SELECT * FROM article
   WHERE id = id AND deleted_at IS NULL;
   */
-  async getArticle(
-    id: number,
-  ): Promise<{ article: ArticleEntity; member: MemberEntity }> {
-    return await this.drizzleService.db
+  async getArticle(id: number): Promise<{
+    article: ArticleEntity;
+    authors: MemberEntity[];
+  }> {
+    const found = await this.drizzleService.db
       .select()
       .from(article)
-      .innerJoin(member, eq(article.memberId, member.id))
       .where(and(eq(article.id, id), isNull(article.deletedAt)))
       .then(existOrThrow('Article not found'));
+
+    return {
+      article: found,
+      authors: await this.findAuthorsByArticleIds([id]).then(
+        (authorsByArticleId) => authorsByArticleId.get(id) ?? [],
+      ),
+    };
   }
 
   /*
@@ -114,17 +145,35 @@ export class ArticleRepository {
   }
 
   /*
-  UPDATE article
-  SET title = title, content = content, image_keys = image_keys, categories = categories
-  WHERE id = id
+  UPDATE article SET ... WHERE id = id;
+  DELETE FROM article_author WHERE article_id = id;
+  INSERT INTO article_author (article_id, member_id, sort_order) VALUES (...);
   */
-  async updateArticle(id: number, body: UpdateArticleDto): Promise<void> {
-    await this.drizzleService.db
-      .update(article)
-      .set({ ...body, updatedAt: new Date() })
-      .where(and(eq(article.id, id), isNull(article.deletedAt)))
-      .returning()
-      .then(existOrThrow('Article not found'));
+  async updateArticle(
+    id: number,
+    { authorIds, ...values }: UpdateArticleDto,
+  ): Promise<void> {
+    await this.drizzleService.db.transaction(async (tx) => {
+      await tx
+        .update(article)
+        .set({ ...values, updatedAt: new Date() })
+        .where(and(eq(article.id, id), isNull(article.deletedAt)))
+        .returning()
+        .then(existOrThrow('Article not found'));
+
+      if (!authorIds) return;
+
+      await tx.delete(articleAuthor).where(eq(articleAuthor.articleId, id));
+      if (authorIds.length === 0) return;
+
+      await tx.insert(articleAuthor).values(
+        authorIds.map((memberId, index) => ({
+          articleId: id,
+          memberId,
+          sortOrder: index,
+        })),
+      );
+    });
   }
 
   /*
@@ -139,6 +188,35 @@ export class ArticleRepository {
       .where(and(eq(article.id, id), isNull(article.deletedAt)))
       .returning()
       .then(existOrThrow('Article not found'));
+  }
+
+  /*
+  SELECT article_author.article_id, member.*
+  FROM article_author
+  JOIN member ON member.id = article_author.member_id
+  WHERE article_author.article_id IN (ids)
+  ORDER BY article_author.sort_order;
+  */
+  private async findAuthorsByArticleIds(
+    ids: number[],
+  ): Promise<Map<number, MemberEntity[]>> {
+    const authorsByArticleId = new Map<number, MemberEntity[]>();
+    if (ids.length === 0) return authorsByArticleId;
+
+    const rows = await this.drizzleService.db
+      .select({ articleId: articleAuthor.articleId, author: member })
+      .from(articleAuthor)
+      .innerJoin(member, eq(articleAuthor.memberId, member.id))
+      .where(inArray(articleAuthor.articleId, ids))
+      .orderBy(articleAuthor.sortOrder);
+
+    for (const { articleId, author } of rows) {
+      const found = authorsByArticleId.get(articleId);
+      if (found) found.push(author);
+      else authorsByArticleId.set(articleId, [author]);
+    }
+
+    return authorsByArticleId;
   }
 
   private buildWhereClause({

@@ -4,7 +4,7 @@ import { Exclude, Expose } from 'class-transformer';
 import { CommentDto } from 'src/comment/dto/res/comment.dto';
 
 @Exclude()
-class MemberInfoDto {
+class AuthorInfoDto {
   @ApiProperty({
     description: 'id',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -13,21 +13,14 @@ class MemberInfoDto {
   id!: string;
 
   @ApiProperty({
-    description: 'email',
-    example: 'member@example.com',
-  })
-  @Expose()
-  email!: string;
-
-  @ApiProperty({
     description: 'name',
     example: 'Member Name',
   })
   @Expose()
   name!: string;
 
-  constructor(member: MemberEntity) {
-    Object.assign(this, member);
+  constructor(author: MemberEntity) {
+    Object.assign(this, author);
   }
 }
 
@@ -94,10 +87,11 @@ export class ArticleDto {
   updatedAt!: Date;
 
   @ApiProperty({
-    description: 'member information',
+    description: 'authors information',
+    type: [AuthorInfoDto],
   })
   @Expose()
-  member!: MemberInfoDto;
+  authors!: AuthorInfoDto[];
 
   @ApiProperty({
     description: 'comments on the article',
@@ -108,15 +102,15 @@ export class ArticleDto {
 
   constructor({
     article,
-    member,
+    authors,
     comments = [],
   }: {
     article: ArticleEntity;
-    member: MemberEntity;
+    authors: MemberEntity[];
     comments?: CommentDto[];
   }) {
     Object.assign(this, article);
-    this.member = new MemberInfoDto(member);
+    this.authors = authors.map((author) => new AuthorInfoDto(author));
     this.comments = comments;
   }
 }

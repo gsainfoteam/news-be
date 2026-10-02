@@ -2,7 +2,7 @@ import { Category, Permission, Role } from '../libs/drizzle/src/enum';
 import { sql } from 'drizzle-orm';
 import { pgEnum } from 'drizzle-orm/pg-core';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import { uniqueIndex } from 'drizzle-orm/pg-core';
+import { uniqueIndex, index, primaryKey } from 'drizzle-orm/pg-core';
 import {
   pgTable,
   serial,
@@ -81,13 +81,27 @@ export const article = pgTable('article', {
   imageKeys: text('image_keys').array(),
   views: integer('views').default(0).notNull(),
   categories: category('categories').array().$type<Category[]>().notNull(),
-  memberId: uuid('member_id')
-    .notNull()
-    .references(() => member.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const articleAuthor = pgTable(
+  'article_author',
+  {
+    articleId: integer('article_id')
+      .notNull()
+      .references(() => article.id, { onDelete: 'cascade' }),
+    memberId: uuid('member_id')
+      .notNull()
+      .references(() => member.id),
+    sortOrder: integer('sort_order').default(0).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.articleId, table.memberId] }),
+    index('article_author_member_idx').on(table.memberId),
+  ],
+);
 
 export const comment = pgTable('comment', {
   id: serial('id').primaryKey(),

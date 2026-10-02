@@ -27,17 +27,14 @@ export class ArticleService {
     ]);
     return new ArticleListDto(articles, count);
   }
-  async createArticle(
-    memberId: string,
-    body: CreateArticleDto,
-  ): Promise<ArticleDto> {
+  async createArticle(body: CreateArticleDto): Promise<ArticleDto> {
     if (body.imageKeys) {
       await Promise.all(
         body.imageKeys.map((key) => this.imageService.verifyFileExist(key)),
       );
     }
 
-    const article = await this.articleRepository.createArticle(memberId, body);
+    const article = await this.articleRepository.createArticle(body);
     const result = await this.articleRepository.getArticle(article.id);
     return new ArticleDto(result);
   }

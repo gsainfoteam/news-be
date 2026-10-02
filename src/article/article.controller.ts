@@ -23,8 +23,6 @@ import { ArticleService } from './article.service';
 import { ArticleDto } from './dto/res/article.dto';
 import { CreateArticleDto } from './dto/req/create-article.dto';
 import { MemberGuard } from 'src/member/guard/member.guard';
-import { GetMember } from 'src/member/decorator/get-member.decorator';
-import { MemberEntity } from '@lib/drizzle';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
@@ -66,11 +64,8 @@ export class ArticleController {
   @ApiBearerAuth('jwt')
   @UseGuards(MemberGuard)
   @Post()
-  async createArticle(
-    @GetMember() member: MemberEntity,
-    @Body() body: CreateArticleDto,
-  ): Promise<ArticleDto> {
-    return await this.articleService.createArticle(member.id, body);
+  async createArticle(@Body() body: CreateArticleDto): Promise<ArticleDto> {
+    return await this.articleService.createArticle(body);
   }
 
   @ApiOperation({
