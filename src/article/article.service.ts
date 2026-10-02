@@ -28,7 +28,7 @@ export class ArticleService {
     return new ArticleListDto(articles, count);
   }
   async createArticle(
-    editorId: string,
+    memberId: string,
     body: CreateArticleDto,
   ): Promise<ArticleDto> {
     if (body.imageKeys) {
@@ -37,7 +37,7 @@ export class ArticleService {
       );
     }
 
-    const article = await this.articleRepository.createArticle(editorId, body);
+    const article = await this.articleRepository.createArticle(memberId, body);
     const result = await this.articleRepository.getArticle(article.id);
     return new ArticleDto(result);
   }

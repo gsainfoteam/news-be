@@ -7,7 +7,7 @@ export class ArticleEntity {
   content!: string;
   imageKeys!: string[] | null;
   views!: number;
-  editorId!: string;
+  memberId!: string;
   categories!: Category[];
   createdAt!: Date;
   updatedAt!: Date;

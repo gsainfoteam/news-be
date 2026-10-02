@@ -1,7 +1,6 @@
-import { EditorEntity, UserEntity } from '@lib/drizzle';
+import { MemberEntity, Permission, Role, UserEntity } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
-import { Role } from 'src/user/enum/role.enum';
 
 @Exclude()
 export class UserDto {
@@ -42,13 +41,22 @@ export class UserDto {
   @Expose()
   nickname!: string | null;
 
-  @ApiProperty({
-    description: 'user role (USER, EDITOR, EDITORSHIP)',
-    example: Role.EDITOR,
+  @ApiPropertyOptional({
+    description: 'position in the newsroom, null when the user is not a member',
+    example: Role.REPORTING_REPORTER,
     enum: Role,
+    nullable: true,
   })
   @Expose()
-  role!: Role;
+  role!: Role | null;
+
+  @ApiProperty({
+    description: 'access permission',
+    example: Permission.NONE,
+    enum: Permission,
+  })
+  @Expose()
+  permission!: Permission;
 
   @ApiPropertyOptional({
     description: 'terms agreed at',
@@ -80,12 +88,9 @@ export class UserDto {
   @Expose()
   updatedAt!: Date;
 
-  constructor(user: UserEntity, editor: EditorEntity | null) {
+  constructor(user: UserEntity, member: MemberEntity | null) {
     Object.assign(this, user);
-    this.role = editor
-      ? editor.isEditorship
-        ? Role.EDITORSHIP
-        : Role.EDITOR
-      : Role.USER;
+    this.role = member?.role ?? null;
+    this.permission = member?.permission ?? Permission.NONE;
   }
 }

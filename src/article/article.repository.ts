@@ -2,11 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   ArticleEntity,
   DrizzleService,
-  EditorEntity,
+  MemberEntity,
   existOrThrow,
 } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
-import { article, editor } from 'drizzle/schema';
+import { article, member } from 'drizzle/schema';
 import {
   eq,
   sql,
@@ -37,7 +37,7 @@ export class ArticleRepository {
   */
   async getArticles(
     query: SearchArticlesDto,
-  ): Promise<{ article: ArticleEntity; editor: EditorEntity }[]> {
+  ): Promise<{ article: ArticleEntity; member: MemberEntity }[]> {
     const { offset, limit, sort } = query;
     const whereClause = this.buildWhereClause(query);
 
@@ -49,7 +49,7 @@ export class ArticleRepository {
     return await this.drizzleService.db
       .select()
       .from(article)
-      .innerJoin(editor, eq(article.editorId, editor.id))
+      .innerJoin(member, eq(article.memberId, member.id))
       .where(whereClause)
       .orderBy(orderClause)
       .offset(offset)
@@ -70,16 +70,16 @@ export class ArticleRepository {
   }
 
   /*
-  INSERT INTO article (title, content, image_keys, editor_id, categories)
-  VALUES (title, content, image_keys, editor_id, categories);
+  INSERT INTO article (title, content, image_keys, member_id, categories)
+  VALUES (title, content, image_keys, member_id, categories);
   */
   async createArticle(
-    editorId: string,
+    memberId: string,
     body: CreateArticleDto,
   ): Promise<ArticleEntity> {
     return await this.drizzleService.db
       .insert(article)
-      .values({ ...body, editorId })
+      .values({ ...body, memberId })
       .returning()
       .then(existOrThrow('Failed to create article'));
   }
@@ -90,11 +90,11 @@ export class ArticleRepository {
   */
   async getArticle(
     id: number,
-  ): Promise<{ article: ArticleEntity; editor: EditorEntity }> {
+  ): Promise<{ article: ArticleEntity; member: MemberEntity }> {
     return await this.drizzleService.db
       .select()
       .from(article)
-      .innerJoin(editor, eq(article.editorId, editor.id))
+      .innerJoin(member, eq(article.memberId, member.id))
       .where(and(eq(article.id, id), isNull(article.deletedAt)))
       .then(existOrThrow('Article not found'));
   }

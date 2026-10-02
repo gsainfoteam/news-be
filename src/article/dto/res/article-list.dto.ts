@@ -1,4 +1,4 @@
-import { ArticleEntity, EditorEntity } from '@lib/drizzle';
+import { ArticleEntity, MemberEntity } from '@lib/drizzle';
 import { ApiProperty } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 import { ArticleDto } from './article.dto';
@@ -20,7 +20,7 @@ export class ArticleListDto {
   count: number;
 
   constructor(
-    articles: { article: ArticleEntity; editor: EditorEntity }[],
+    articles: { article: ArticleEntity; member: MemberEntity }[],
     count: number,
   ) {
     this.articles = articles.map((article) => new ArticleDto(article));
