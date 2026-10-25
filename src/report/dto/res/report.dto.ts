@@ -44,7 +44,7 @@ export class ReportDto {
 
   @ApiProperty({
     description: 'phone number of the reporter',
-    example: '010-1234-5678',
+    example: '+82 10 1234 5678',
   })
   @Expose()
   phone!: string;

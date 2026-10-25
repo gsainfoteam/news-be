@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import {
   ArrayMaxSize,
   ArrayUnique,
@@ -31,9 +33,16 @@ export class CreateReportDto {
   email!: string;
 
   @ApiProperty({
-    description: 'Phone number of the reporter',
+    description:
+      'Phone number of the reporter. Stored in the international format, e.g. `010-1234-5678` → `+82 10 1234 5678`.',
     example: '010-1234-5678',
   })
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string'
+      ? (parsePhoneNumberFromString(value, 'KR')?.formatInternational() ??
+        value)
+      : value,
+  )
   @IsPhoneNumber('KR')
   phone!: string;
 
