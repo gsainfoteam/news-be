@@ -1,11 +1,12 @@
 import {
   DrizzleService,
   MemberEntity,
+  Permission,
   Role,
   existOrThrow,
   UserEntity,
 } from '@lib/drizzle';
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { member, user } from 'drizzle/schema';
 import { RegisterMembersDto } from './dto/req/register-members.dto';
@@ -57,6 +58,9 @@ export class MemberRepository {
   }
 
   /*
+  SELECT id FROM member
+  WHERE id = callerId AND permission = 'EDITORSHIP' AND deleted_at IS NULL
+  FOR UPDATE;
   UPDATE member
   SET name = name, email = email, role = role, permission = permission, updated_at = NOW()
   WHERE id = id AND deleted_at IS NULL;
@@ -68,10 +72,28 @@ export class MemberRepository {
   ): Promise<void> {
     await this.drizzleService.db.transaction(async (tx) => {
       await tx
+        .select({ id: member.id })
+        .from(member)
+        .where(
+          and(
+            eq(member.id, callerId),
+            eq(member.permission, Permission.EDITORSHIP),
+            isNull(member.deletedAt),
+          ),
+        )
+        .for('update')
+        .then(
+          existOrThrow(
+            new ForbiddenException(
+              'This action requires EDITORSHIP permission',
+            ),
+          ),
+        );
+
+      await tx
         .update(member)
         .set({
           ...values,
-          // 권한은 직접 받지 않고 직책에서 다시 도출한다
           ...(role && { role, permission: DEFAULT_PERMISSION[role] }),
           updatedAt: new Date(),
         })
@@ -79,7 +101,6 @@ export class MemberRepository {
         .returning()
         .then(existOrThrow('Member not found'));
 
-      // 편집장을 넘겼으면 넘긴 본인은 수습기자로 내려간다
       if (role !== Role.EDITOR_IN_CHIEF) return;
 
       await tx

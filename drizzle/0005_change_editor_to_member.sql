@@ -21,5 +21,4 @@ ALTER TABLE "article_author" ADD CONSTRAINT "article_author_member_id_member_id_
 CREATE INDEX "article_author_member_idx" ON "article_author" USING btree ("member_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "member_email_unique_idx" ON "member" USING btree ("email") WHERE "member"."deleted_at" IS NULL;--> statement-breakpoint
 INSERT INTO "article_author" ("article_id", "member_id", "sort_order") SELECT "id", "editor_id", 0 FROM "article";--> statement-breakpoint
-ALTER TABLE "article" DROP COLUMN "editor_id";--> statement-breakpoint
-ALTER TABLE "member" ADD CONSTRAINT "member_email_unique" UNIQUE("email");
+ALTER TABLE "article" DROP COLUMN "editor_id";

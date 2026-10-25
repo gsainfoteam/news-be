@@ -53,7 +53,7 @@ export const member = pgTable(
   'member',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    email: text('email').notNull().unique(),
+    email: text('email').notNull(),
     name: text('name').notNull(),
     // 직책 (FE 신문사 명단 표기용)
     role: role('role').$type<Role>().default(Role.CUB_REPORTER).notNull(),

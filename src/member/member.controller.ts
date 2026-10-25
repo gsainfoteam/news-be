@@ -105,7 +105,7 @@ export class MemberController {
   @ApiOperation({
     summary: 'Delete Member',
     description:
-      '[Author: Editorship] Soft delete a member by recording the deletedAt timestamp. To mark someone as having left the team, set their role to ALUMNI instead so that their bylines survive. The caller cannot delete themselves.',
+      '[Author: Editorship] Soft delete a member by recording the deletedAt timestamp. A deleted member is hidden from the member list but stays credited as an author on their articles, and their email can be registered again. To keep someone on the list as a former member, set their role to ALUMNI instead. The caller cannot delete themselves.',
   })
   @ApiOkResponse({
     description: 'The member has been successfully deleted.',
