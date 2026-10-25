@@ -1,6 +1,14 @@
 import { Category } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  ArrayUnique,
+  IsArray,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateArticleDto {
   @ApiProperty({
@@ -43,4 +51,15 @@ export class CreateArticleDto {
   @IsArray()
   @IsEnum(Category, { each: true })
   categories!: Category[];
+
+  @ApiProperty({
+    description: '',
+    example: ['123e4567-e89b-12d3-a456-426614174000'],
+    type: [String],
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @ArrayUnique()
+  @IsUUID('4', { each: true })
+  authorIds!: string[];
 }

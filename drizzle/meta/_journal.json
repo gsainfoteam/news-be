@@ -36,6 +36,13 @@
       "when": 1789561316650,
       "tag": "0004_add-subtitle",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790920193257,
+      "tag": "0005_change_editor_to_member",
+      "breakpoints": true
     }
   ]
 }

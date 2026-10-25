@@ -5,7 +5,7 @@ import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { LoggerModule } from '@lib/logger';
-import { EditorModule } from './editor/editor.module';
+import { MemberModule } from './member/member.module';
 import { ArticleModule } from './article/article.module';
 import { CommentModule } from './comment/comment.module';
 import { PostgresExceptionFilter } from '@lib/drizzle';
@@ -16,7 +16,7 @@ import { PostgresExceptionFilter } from '@lib/drizzle';
     LoggerModule,
     AuthModule,
     UserModule,
-    EditorModule,
+    MemberModule,
     ArticleModule,
     CommentModule,
     HealthModule,

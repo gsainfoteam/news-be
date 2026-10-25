@@ -3,7 +3,7 @@ import { UserRepository } from './user.repository';
 import { Loggable } from '@lib/logger';
 import { UserEntity } from '@lib/drizzle';
 import { UserDto } from './dto/res/user.dto';
-import { EditorService } from 'src/editor/editor.service';
+import { MemberService } from 'src/member/member.service';
 import { RegisterUserDto } from './dto/req/register-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +20,7 @@ export class UserService {
 
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly editorService: EditorService,
+    private readonly memberService: MemberService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
@@ -49,8 +49,8 @@ export class UserService {
   }
 
   async getMe(user: UserEntity): Promise<UserDto> {
-    const editor = await this.editorService.findEditorByEmail(user.email);
-    return new UserDto(user, editor);
+    const member = await this.memberService.findMemberByEmail(user.email);
+    return new UserDto(user, member);
   }
 
   async updateConsent(user: UserEntity, body: UpdateConsentDto): Promise<void> {

@@ -22,9 +22,7 @@ import {
 import { ArticleService } from './article.service';
 import { ArticleDto } from './dto/res/article.dto';
 import { CreateArticleDto } from './dto/req/create-article.dto';
-import { EditorGuard } from 'src/editor/guard/editor.guard';
-import { GetEditor } from 'src/editor/decorator/get-editor.decorator';
-import { EditorEntity } from '@lib/drizzle';
+import { MemberGuard } from 'src/member/guard/member.guard';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
@@ -64,13 +62,10 @@ export class ArticleController {
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
-  @UseGuards(EditorGuard)
+  @UseGuards(MemberGuard)
   @Post()
-  async createArticle(
-    @GetEditor() editor: EditorEntity,
-    @Body() body: CreateArticleDto,
-  ): Promise<ArticleDto> {
-    return await this.articleService.createArticle(editor.id, body);
+  async createArticle(@Body() body: CreateArticleDto): Promise<ArticleDto> {
+    return await this.articleService.createArticle(body);
   }
 
   @ApiOperation({
@@ -87,7 +82,7 @@ export class ArticleController {
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
-  @UseGuards(EditorGuard)
+  @UseGuards(MemberGuard)
   @Post('image')
   async getUploadUrl(
     @Body() body: CreatePresignedUrlDto,
@@ -126,7 +121,7 @@ export class ArticleController {
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
-  @UseGuards(EditorGuard)
+  @UseGuards(MemberGuard)
   @Patch(':id')
   async updateArticle(
     @Param('id', ParseIntPipe) id: number,
@@ -147,7 +142,7 @@ export class ArticleController {
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
-  @UseGuards(EditorGuard)
+  @UseGuards(MemberGuard)
   @Delete(':id')
   async deleteArticle(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.articleService.deleteArticle(id);

@@ -1,10 +1,10 @@
-import { ArticleEntity, Category, EditorEntity } from '@lib/drizzle';
+import { ArticleEntity, Category, MemberEntity } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
 import { CommentDto } from 'src/comment/dto/res/comment.dto';
 
 @Exclude()
-class EditorInfoDto {
+class AuthorInfoDto {
   @ApiProperty({
     description: 'id',
     example: '123e4567-e89b-12d3-a456-426614174000',
@@ -13,21 +13,14 @@ class EditorInfoDto {
   id!: string;
 
   @ApiProperty({
-    description: 'email',
-    example: 'editor@example.com',
-  })
-  @Expose()
-  email!: string;
-
-  @ApiProperty({
     description: 'name',
-    example: 'Editor Name',
+    example: 'Member Name',
   })
   @Expose()
   name!: string;
 
-  constructor(editor: EditorEntity) {
-    Object.assign(this, editor);
+  constructor(author: MemberEntity) {
+    Object.assign(this, author);
   }
 }
 
@@ -94,10 +87,11 @@ export class ArticleDto {
   updatedAt!: Date;
 
   @ApiProperty({
-    description: 'editor information',
+    description: 'authors information',
+    type: [AuthorInfoDto],
   })
   @Expose()
-  editor!: EditorInfoDto;
+  authors!: AuthorInfoDto[];
 
   @ApiProperty({
     description: 'comments on the article',
@@ -108,15 +102,15 @@ export class ArticleDto {
 
   constructor({
     article,
-    editor,
+    authors,
     comments = [],
   }: {
     article: ArticleEntity;
-    editor: EditorEntity;
+    authors: MemberEntity[];
     comments?: CommentDto[];
   }) {
     Object.assign(this, article);
-    this.editor = new EditorInfoDto(editor);
+    this.authors = authors.map((author) => new AuthorInfoDto(author));
     this.comments = comments;
   }
 }

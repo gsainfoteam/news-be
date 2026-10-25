@@ -8,14 +8,15 @@ import { CommentRepository } from './comment.repository';
 import { CommentDto } from './dto/res/comment.dto';
 import { CreateCommentDto } from './dto/req/create-comment.dto';
 import { UpdateCommentDto } from './dto/req/update-comment.dto';
-import { UserEntity } from '@lib/drizzle';
-import { EditorService } from 'src/editor/editor.service';
+import { Permission, UserEntity } from '@lib/drizzle';
+import { MemberService } from 'src/member/member.service';
+import { hasPermission } from 'src/member/member.policy';
 
 @Injectable()
 export class CommentService {
   constructor(
     private readonly commentRepository: CommentRepository,
-    private readonly editorService: EditorService,
+    private readonly memberService: MemberService,
   ) {}
 
   async createComment(
@@ -68,8 +69,8 @@ export class CommentService {
     }
 
     if (comment.userId !== user.id) {
-      const editor = await this.editorService.findEditorByEmail(user.email);
-      if (!editor) {
+      const member = await this.memberService.findMemberByEmail(user.email);
+      if (!member || !hasPermission(member.permission, Permission.EDITOR)) {
         throw new ForbiddenException(
           'Only the author or an editor can delete this comment',
         );

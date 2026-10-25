@@ -1,6 +1,6 @@
 import { Category } from '@lib/drizzle';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ArticleSort } from 'src/article/enum/article-sort.enum';
 
@@ -25,6 +25,7 @@ export class SearchArticlesDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(50)
   limit: number = 10;
 
   @ApiPropertyOptional({
