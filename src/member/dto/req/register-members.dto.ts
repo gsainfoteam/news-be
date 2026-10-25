@@ -1,6 +1,6 @@
 import { Role } from '@lib/drizzle';
 import { ApiProperty } from '@nestjs/swagger';
-import { REGISTRABLE_ROLES } from '../../member.policy';
+import { REGISTRABLE_ROLES, ROLE_DOC } from '../../member.policy';
 import { IsEmail, IsIn, IsString } from 'class-validator';
 
 export class RegisterMembersDto {
@@ -20,8 +20,7 @@ export class RegisterMembersDto {
   name!: string;
 
   @ApiProperty({
-    description:
-      'The role (position) of the member. The initial permission is derived from this. EDITOR_IN_CHIEF cannot be assigned here - hand the editorship over with PATCH /member/:id instead.',
+    description: `The role (position) of the member. The initial permission is derived from this. EDITOR_IN_CHIEF cannot be assigned here - hand the editorship over with PATCH /member/:id instead.\n\n${ROLE_DOC}`,
     example: Role.CUB_REPORTER,
     enum: REGISTRABLE_ROLES,
   })

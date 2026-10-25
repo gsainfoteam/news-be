@@ -1,6 +1,7 @@
 import { MemberEntity, Permission, Role, UserEntity } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude, Expose } from 'class-transformer';
+import { ROLE_DOC } from '../../member.policy';
 
 @Exclude()
 export class MemberDto {
@@ -34,7 +35,7 @@ export class MemberDto {
   picture?: string | null;
 
   @ApiProperty({
-    description: 'position, shown in bylines',
+    description: `position, shown in bylines\n\n${ROLE_DOC}`,
     example: Role.REPORTING_REPORTER,
     enum: Role,
   })
