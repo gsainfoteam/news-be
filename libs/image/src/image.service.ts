@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Loggable } from '@lib/logger';
 import { ConfigService } from '@nestjs/config';
 import {
+  GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -43,6 +44,16 @@ export class ImageService {
       ContentType: contentType,
     });
     const expiresIn = 5 * 60; // 5 minutes
+    return getSignedUrl(this.s3Client, command, { expiresIn });
+  }
+
+  // 공개 URL로 내보내면 안 되는 파일(제보 첨부 등)을 잠시 열람할 수 있는 URL
+  async createPresignedGetUrl(key: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.configService.getOrThrow<string>('AWS_S3_BUCKET'),
+      Key: key,
+    });
+    const expiresIn = 10 * 60; // 10 minutes
     return getSignedUrl(this.s3Client, command, { expiresIn });
   }
 

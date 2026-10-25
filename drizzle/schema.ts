@@ -117,3 +117,16 @@ export const comment = pgTable('comment', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   deletedAt: timestamp('deleted_at'),
 });
+
+// 제보. 로그인 없이 받으므로 user를 참조하지 않는다
+export const report = pgTable('report', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  title: text('title'),
+  description: text('description').notNull(),
+  // 비공개 S3 키. 공개 URL로 내보내지 않고 조회 시 서명 URL을 발급한다
+  fileKeys: text('file_keys').array().default([]).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

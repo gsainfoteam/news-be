@@ -43,6 +43,13 @@
       "when": 1790920193257,
       "tag": "0005_change_editor_to_member",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792948828811,
+      "tag": "0006_add_report",
+      "breakpoints": true
     }
   ]
 }

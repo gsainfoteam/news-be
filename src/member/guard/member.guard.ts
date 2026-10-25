@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { MemberService } from '../member.service';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
-import { MemberEntity, Permission, UserEntity } from '@lib/drizzle';
+import { MemberEntity, Permission, Role, UserEntity } from '@lib/drizzle';
 import { PERMISSION_KEY } from '../decorator/permission.decorator';
 import { hasPermission } from '../member.policy';
 
@@ -37,6 +37,9 @@ export class MemberGuard extends AuthGuard('jwt') {
 
     const member = await this.memberService.findMemberByEmail(user.email);
     if (!member) throw new ForbiddenException('User is not a member');
+
+    if (member.role === Role.ALUMNI)
+      throw new ForbiddenException('Former members cannot access this');
 
     request.memberInfo = member;
 
