@@ -5,9 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import expressBasicAuth from 'express-basic-auth';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // 인그레스 뒤에서 실제 클라이언트 IP를 읽는다 (제보 rate limit이 IP 기준)
+  app.set('trust proxy', 1);
   const configService = app.get(ConfigService);
 
   app.use(

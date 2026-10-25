@@ -8,6 +8,7 @@ import { LoggerModule } from '@lib/logger';
 import { MemberModule } from './member/member.module';
 import { ArticleModule } from './article/article.module';
 import { CommentModule } from './comment/comment.module';
+import { ReportModule } from './report/report.module';
 import { PostgresExceptionFilter } from '@lib/drizzle';
 
 @Module({
@@ -19,6 +20,7 @@ import { PostgresExceptionFilter } from '@lib/drizzle';
     MemberModule,
     ArticleModule,
     CommentModule,
+    ReportModule,
     HealthModule,
   ],
   providers: [
