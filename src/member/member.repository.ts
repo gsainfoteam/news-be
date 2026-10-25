@@ -1,7 +1,7 @@
 import {
   DrizzleService,
   MemberEntity,
-  Permission,
+  Role,
   existOrThrow,
   UserEntity,
 } from '@lib/drizzle';
@@ -9,6 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { member, user } from 'drizzle/schema';
 import { RegisterMembersDto } from './dto/req/register-members.dto';
+import { UpdateMemberDto } from './dto/req/update-member.dto';
 import { DEFAULT_PERMISSION } from './member.policy';
 
 @Injectable()
@@ -57,6 +58,45 @@ export class MemberRepository {
 
   /*
   UPDATE member
+  SET name = name, email = email, role = role, permission = permission, updated_at = NOW()
+  WHERE id = id AND deleted_at IS NULL;
+  */
+  async updateMember(
+    callerId: string,
+    id: string,
+    { role, ...values }: UpdateMemberDto,
+  ): Promise<void> {
+    await this.drizzleService.db.transaction(async (tx) => {
+      await tx
+        .update(member)
+        .set({
+          ...values,
+          // 권한은 직접 받지 않고 직책에서 다시 도출한다
+          ...(role && { role, permission: DEFAULT_PERMISSION[role] }),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(member.id, id), isNull(member.deletedAt)))
+        .returning()
+        .then(existOrThrow('Member not found'));
+
+      // 편집장을 넘겼으면 넘긴 본인은 수습기자로 내려간다
+      if (role !== Role.EDITOR_IN_CHIEF) return;
+
+      await tx
+        .update(member)
+        .set({
+          role: Role.CUB_REPORTER,
+          permission: DEFAULT_PERMISSION[Role.CUB_REPORTER],
+          updatedAt: new Date(),
+        })
+        .where(and(eq(member.id, callerId), isNull(member.deletedAt)))
+        .returning()
+        .then(existOrThrow('Member not found'));
+    });
+  }
+
+  /*
+  UPDATE member
   SET updated_at = NOW(), deleted_at = NOW()
   WHERE id = id AND deleted_at IS NULL;
   */
@@ -67,32 +107,6 @@ export class MemberRepository {
       .where(and(eq(member.id, id), isNull(member.deletedAt)))
       .returning()
       .then(existOrThrow('Member not found'));
-  }
-
-  /*
-  UPDATE member SET permission = 'EDITOR'     WHERE id = currentEditorShipId;
-  UPDATE member SET permission = 'EDITORSHIP' WHERE id = newEditorShipId;
-  */
-  async transferEditorship(
-    currentEditorShipId: string,
-    newEditorShipId: string,
-  ): Promise<void> {
-    await this.drizzleService.db.transaction(async (tx) => {
-      await tx
-        .update(member)
-        .set({ permission: Permission.EDITOR, updatedAt: new Date() })
-        .where(
-          and(eq(member.id, currentEditorShipId), isNull(member.deletedAt)),
-        )
-        .returning()
-        .then(existOrThrow('Member not found'));
-      await tx
-        .update(member)
-        .set({ permission: Permission.EDITORSHIP, updatedAt: new Date() })
-        .where(and(eq(member.id, newEditorShipId), isNull(member.deletedAt)))
-        .returning()
-        .then(existOrThrow('Member not found'));
-    });
   }
 
   /*

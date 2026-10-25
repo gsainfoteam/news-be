@@ -13,6 +13,10 @@ export const DEFAULT_PERMISSION: Record<Role, Permission> = {
   [Role.ALUMNI]: Permission.NONE,
 };
 
+export const REGISTRABLE_ROLES: Role[] = Object.values(Role).filter(
+  (role) => role !== Role.EDITOR_IN_CHIEF,
+);
+
 const PERMISSION_ORDER: Record<Permission, number> = {
   [Permission.NONE]: 0,
   [Permission.EDITOR]: 1,

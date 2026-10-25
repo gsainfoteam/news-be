@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   UseGuards,
   ParseArrayPipe,
@@ -18,10 +19,12 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
   ApiBody,
+  ApiConflictResponse,
 } from '@nestjs/swagger';
 import { MemberGuard } from './guard/member.guard';
 import { MemberService } from './member.service';
 import { RegisterMembersDto } from './dto/req/register-members.dto';
+import { UpdateMemberDto } from './dto/req/update-member.dto';
 import { RequiredPermission } from './decorator/permission.decorator';
 import { MemberDto } from './dto/res/member.dto';
 import { GetMember } from './decorator/get-member.decorator';
@@ -73,45 +76,54 @@ export class MemberController {
   }
 
   @ApiOperation({
+    summary: 'Update Member',
+    description:
+      '[Author: Editorship] Update the name, email or role of a member. The permission is re-derived from the role and cannot be set directly. Setting the role to EDITOR_IN_CHIEF hands the editorship over, demoting the caller to CUB_REPORTER in the same transaction. The caller cannot update themselves.',
+  })
+  @ApiOkResponse({
+    description: 'The member has been successfully updated.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden, or the caller tried to update themselves',
+  })
+  @ApiNotFoundResponse({ description: 'Not found' })
+  @ApiConflictResponse({ description: 'The email is already taken' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @RequiredPermission(Permission.EDITORSHIP)
+  @UseGuards(MemberGuard)
+  @Patch(':id')
+  async updateMember(
+    @GetMember() member: MemberEntity,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateMemberDto,
+  ): Promise<void> {
+    await this.memberService.updateMember(member.id, id, body);
+  }
+
+  @ApiOperation({
     summary: 'Delete Member',
     description:
-      '[Author: Editorship] Soft delete a member by recording the deletedAt timestamp. To mark someone as having left the team, set their role to ALUMNI instead so that their bylines survive.',
+      '[Author: Editorship] Soft delete a member by recording the deletedAt timestamp. To mark someone as having left the team, set their role to ALUMNI instead so that their bylines survive. The caller cannot delete themselves.',
   })
   @ApiOkResponse({
     description: 'The member has been successfully deleted.',
   })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden, or the caller tried to delete themselves',
+  })
   @ApiNotFoundResponse({ description: 'Not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
   @RequiredPermission(Permission.EDITORSHIP)
   @UseGuards(MemberGuard)
   @Delete(':id')
-  async deleteMember(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    await this.memberService.deleteMember(id);
-  }
-
-  @ApiOperation({
-    summary: 'Transfer Editorship',
-    description:
-      '[Author: Editorship] Hand the EDITORSHIP permission over to another member. The caller is demoted to EDITOR. Roles are not touched - update them separately.',
-  })
-  @ApiOkResponse({
-    description: 'The editorship has been successfully transferred.',
-  })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiForbiddenResponse({ description: 'Forbidden' })
-  @ApiNotFoundResponse({ description: 'Not found' })
-  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
-  @ApiBearerAuth('jwt')
-  @RequiredPermission(Permission.EDITORSHIP)
-  @UseGuards(MemberGuard)
-  @Post(':id/editorship')
-  async transferEditorship(
+  async deleteMember(
     @GetMember() member: MemberEntity,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
-    await this.memberService.transferEditorship(member.id, id);
+    await this.memberService.deleteMember(member.id, id);
   }
 }
