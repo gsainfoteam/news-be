@@ -2,6 +2,7 @@ import { Category } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayNotEmpty,
+  ArrayUnique,
   IsArray,
   IsEnum,
   IsOptional,
@@ -58,6 +59,7 @@ export class CreateArticleDto {
   })
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayUnique()
   @IsUUID('4', { each: true })
   authorIds!: string[];
 }
