@@ -81,7 +81,7 @@ export class SubscriptionService {
             .sendEmail(email, article.title, html)
             .catch((error) =>
               this.logger.error(
-                `failed to send article ${article.id} mail to ${email}: ${error}`,
+                `failed to send article ${article.id} mail: ${error}`,
               ),
             );
         }

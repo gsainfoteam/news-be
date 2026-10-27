@@ -10,6 +10,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiOkResponse,
   ApiOperation,
@@ -53,7 +54,7 @@ export class SubscriptionController {
       'Subscribing to an already subscribed category is a no-op.',
   })
   @ApiParam({ name: 'category', enum: Category })
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     description: 'The category has been successfully subscribed.',
   })
   @ApiBadRequestResponse({ description: 'Invalid category' })
