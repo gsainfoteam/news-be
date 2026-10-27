@@ -11,6 +11,7 @@ import { SearchArticlesDto } from './dto/req/search-articles.dto';
 import { GetArticleDto } from './dto/req/get-article.dto';
 import { ArticleListDto } from './dto/res/article-list.dto';
 import { CommentService } from 'src/comment/comment.service';
+import { SubscriptionService } from 'src/subscription/subscription.service';
 
 @Injectable()
 export class ArticleService {
@@ -18,6 +19,7 @@ export class ArticleService {
     private readonly articleRepository: ArticleRepository,
     private readonly imageService: ImageService,
     private readonly commentService: CommentService,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   async getArticles(query: SearchArticlesDto): Promise<ArticleListDto> {
@@ -36,6 +38,7 @@ export class ArticleService {
 
     const article = await this.articleRepository.createArticle(body);
     const result = await this.articleRepository.getArticle(article.id);
+    void this.subscriptionService.notifyNewArticle(result);
     return new ArticleDto(result);
   }
 

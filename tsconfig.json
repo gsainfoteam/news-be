@@ -32,7 +32,9 @@
       "@lib/image": ["libs/image/src"],
       "@lib/image/*": ["libs/image/src/*"],
       "@lib/templates": ["libs/templates/src"],
-      "@lib/templates/*": ["libs/templates/src/*"]
+      "@lib/templates/*": ["libs/templates/src/*"],
+      "@lib/mail": ["libs/mail/src"],
+      "@lib/mail/*": ["libs/mail/src/*"]
     }
   }
 }

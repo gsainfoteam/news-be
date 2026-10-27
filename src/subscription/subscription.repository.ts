@@ -1,8 +1,8 @@
 import { Category, DrizzleService } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
 import { Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
-import { categorySubscription } from 'drizzle/schema';
+import { and, eq, inArray } from 'drizzle-orm';
+import { categorySubscription, user } from 'drizzle/schema';
 
 @Loggable()
 @Injectable()
@@ -47,5 +47,21 @@ export class SubscriptionRepository {
           eq(categorySubscription.category, category),
         ),
       );
+  }
+
+  /*
+  SELECT u.email, cs.category
+  FROM category_subscription cs
+  JOIN "user" u ON u.id = cs.user_id
+  WHERE cs.category IN (categories);
+  */
+  async findSubscribers(
+    categories: Category[],
+  ): Promise<{ email: string; category: Category }[]> {
+    return await this.drizzleService.db
+      .select({ email: user.email, category: categorySubscription.category })
+      .from(categorySubscription)
+      .innerJoin(user, eq(user.id, categorySubscription.userId))
+      .where(inArray(categorySubscription.category, categories));
   }
 }

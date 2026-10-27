@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { render } from '@react-email/components';
-import * as React from 'react';
 
 import NewArticle, { NewArticleProps } from './templates/new-article';
 
