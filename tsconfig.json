@@ -11,6 +11,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
+    "jsx": "react-jsx",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
@@ -29,7 +30,9 @@
       "@lib/logger": ["libs/logger/src"],
       "@lib/logger/*": ["libs/logger/src/*"],
       "@lib/image": ["libs/image/src"],
-      "@lib/image/*": ["libs/image/src/*"]
+      "@lib/image/*": ["libs/image/src/*"],
+      "@lib/templates": ["libs/templates/src"],
+      "@lib/templates/*": ["libs/templates/src/*"]
     }
   }
 }
