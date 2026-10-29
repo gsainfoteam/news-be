@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { setTimeout } from 'timers/promises';
 import { Loggable } from '@lib/logger';
 import {
   ArticleEntity,
@@ -14,9 +13,6 @@ import { badgeColorOf, CATEGORY_LABEL } from '@lib/templates';
 import { SubscriptionRepository } from './subscription.repository';
 import { SubscriptionDto } from './dto/res/subscription.dto';
 import { groupRecipientsByCategory } from './group-recipients';
-
-// 스티비 자동 이메일 API 제한이 초당 3회라 호출 사이를 띄운다
-const STIBEE_AUTO_EMAIL_INTERVAL_MS = 350;
 
 @Loggable()
 @Injectable()
@@ -96,7 +92,6 @@ export class SubscriptionService {
                 `failed to send article ${article.id} mail: ${error}`,
               ),
             );
-          await setTimeout(STIBEE_AUTO_EMAIL_INTERVAL_MS);
         }
       }
     } catch (error) {

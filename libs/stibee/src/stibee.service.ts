@@ -3,10 +3,14 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { setTimeout } from 'timers/promises';
+
+const AUTO_EMAIL_INTERVAL_MS = 350;
 
 @Loggable()
 @Injectable()
 export class StibeeService {
+  private autoEmailQueue: Promise<unknown> = Promise.resolve();
   private readonly apiUrl: string;
   private readonly listId: string;
   private readonly autoEmailUrl: string;
@@ -51,12 +55,18 @@ export class StibeeService {
     email: string,
     fields: Record<string, string>,
   ): Promise<void> {
-    await firstValueFrom(
-      this.httpService.post(
-        this.autoEmailUrl,
-        { ...fields, subscriber: email },
-        { headers: this.headers },
+    const send = this.autoEmailQueue.then(() =>
+      firstValueFrom(
+        this.httpService.post(
+          this.autoEmailUrl,
+          { ...fields, subscriber: email },
+          { headers: this.headers },
+        ),
       ),
     );
+    this.autoEmailQueue = send
+      .catch(() => undefined)
+      .then(() => setTimeout(AUTO_EMAIL_INTERVAL_MS));
+    await send;
   }
 }
