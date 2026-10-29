@@ -5,11 +5,10 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { setTimeout } from 'timers/promises';
 
-const AUTO_EMAIL_INTERVAL_MS = 350;
-
 @Loggable()
 @Injectable()
 export class StibeeService {
+  private readonly AUTO_EMAIL_INTERVAL_MS = 350;
   private autoEmailQueue: Promise<unknown> = Promise.resolve();
   private readonly apiUrl: string;
   private readonly listId: string;
@@ -51,6 +50,7 @@ export class StibeeService {
   }
 
   // 200은 접수, 실제 발송 결과는 스티비 이메일 통계에서
+  // TODO: 발신자(editor@gist.ac.kr) 도메인에 스티비 DKIM이 없어 "확인되지 않은 보낸 사람" 경고가 뜸, 학교 전산팀에 DKIM 레코드 추가 요청 필요
   async sendAutoEmail(
     email: string,
     fields: Record<string, string>,
@@ -66,7 +66,7 @@ export class StibeeService {
     );
     this.autoEmailQueue = send
       .catch(() => undefined)
-      .then(() => setTimeout(AUTO_EMAIL_INTERVAL_MS));
+      .then(() => setTimeout(this.AUTO_EMAIL_INTERVAL_MS));
     await send;
   }
 }

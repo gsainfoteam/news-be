@@ -14,6 +14,17 @@ import { SubscriptionRepository } from './subscription.repository';
 import { SubscriptionDto } from './dto/res/subscription.dto';
 import { groupRecipientsByCategory } from './group-recipients';
 
+const HTML_ESCAPE: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+const escapeHtml = (value: string): string =>
+  value.replace(/[&<>"']/g, (char) => HTML_ESCAPE[char]);
+
 @Loggable()
 @Injectable()
 export class SubscriptionService {
@@ -64,9 +75,10 @@ export class SubscriptionService {
       const groups = groupRecipientsByCategory(subscribers, article.categories);
       const imageKey = article.imageKeys?.[0];
       const fields = {
-        title: article.title,
-        subtitle: article.subtitle ?? '',
-        authors: authors.map(({ name }) => name).join(', '),
+        mailSubject: article.title,
+        title: escapeHtml(article.title),
+        subtitle: escapeHtml(article.subtitle ?? ''),
+        authors: escapeHtml(authors.map(({ name }) => name).join(', ')),
         publishedAt: article.createdAt
           .toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
           .replaceAll('-', '.'),
