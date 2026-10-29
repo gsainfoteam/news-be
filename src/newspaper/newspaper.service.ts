@@ -29,6 +29,7 @@ export class NewspaperService {
         contentLength,
         'application/pdf',
       ),
+      'application/pdf',
       key,
     );
   }

@@ -65,6 +65,7 @@ export class ArticleService {
         body.contentLength,
         contentType,
       ),
+      contentType,
       publicUrl: this.fileService.getUrl(key),
       key,
     };

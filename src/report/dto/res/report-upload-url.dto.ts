@@ -5,11 +5,18 @@ import { Exclude, Expose } from 'class-transformer';
 export class ReportUploadUrlDto {
   @ApiProperty({
     description:
-      'Upload URL (presigned url). PUT the file here with the same Content-Length and Content-Type within 5 minutes.',
+      'Upload URL (presigned url). PUT the file here within 5 minutes with the same Content-Length and the `Content-Type` header set to `contentType`.',
     example: 'https://example.com/upload',
   })
   @Expose()
   uploadUrl!: string;
+
+  @ApiProperty({
+    description: 'Content-Type header to send with the PUT request',
+    example: 'image/png',
+  })
+  @Expose()
+  contentType!: string;
 
   @ApiProperty({
     description: 'File key for `POST /report` request',
@@ -18,8 +25,9 @@ export class ReportUploadUrlDto {
   @Expose()
   key!: string;
 
-  constructor(uploadUrl: string, key: string) {
+  constructor(uploadUrl: string, contentType: string, key: string) {
     this.uploadUrl = uploadUrl;
+    this.contentType = contentType;
     this.key = key;
   }
 }

@@ -37,6 +37,7 @@ export class ReportService {
         contentLength,
         contentType,
       ),
+      contentType,
       key,
     );
   }
