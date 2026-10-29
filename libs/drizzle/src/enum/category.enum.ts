@@ -14,4 +14,5 @@ export enum Category {
   EXTERNAL_COLUMN = 'EXTERNAL_COLUMN', // 외부 칼럼
   READERS_COMMITTEE = 'READERS_COMMITTEE', // 독자자문위원회
   CARTOON = 'CARTOON', // 4컷 만화/만평
+  NOTICE = 'NOTICE', // 공지사항
 }

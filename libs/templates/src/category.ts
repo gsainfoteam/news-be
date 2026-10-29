@@ -17,6 +17,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   [Category.EXTERNAL_COLUMN]: '외부 칼럼',
   [Category.READERS_COMMITTEE]: '독자자문위원회',
   [Category.CARTOON]: '4컷 만화/만평',
+  [Category.NOTICE]: '공지사항',
 };
 
 const BADGE_COLOR_DEFAULT = '#525252';
