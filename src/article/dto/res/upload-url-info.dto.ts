@@ -4,7 +4,8 @@ import { Exclude, Expose } from 'class-transformer';
 @Exclude()
 export class UploadUrlInfoDto {
   @ApiProperty({
-    description: 'Upload URL (presigned url)',
+    description:
+      'Upload URL (presigned url). PUT the file here with the same Content-Length and the Content-Type matching its extension within 5 minutes.',
     example: 'https://example.com/upload',
   })
   @Expose()

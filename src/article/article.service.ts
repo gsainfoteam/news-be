@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ArticleRepository } from './article.repository';
 import { ArticleDto } from './dto/res/article.dto';
 import { CreateArticleDto } from './dto/req/create-article.dto';
@@ -46,7 +46,7 @@ export class ArticleService {
     const key = `articles/${new Date().toISOString().split('T')[0]}/${crypto.randomBytes(16).toString('base64url')}-${body.fileName}`;
     const ext = body.fileName.split('.').pop()?.toLowerCase();
 
-    let contentType = 'application/octet-stream';
+    let contentType: string;
     if (ext === 'png') {
       contentType = 'image/png';
     } else if (ext === 'jpg' || ext === 'jpeg') {
@@ -55,6 +55,8 @@ export class ArticleService {
       contentType = 'image/gif';
     } else if (ext === 'webp') {
       contentType = 'image/webp';
+    } else {
+      throw new BadRequestException(`File extension .${ext} is not allowed`);
     }
 
     return {

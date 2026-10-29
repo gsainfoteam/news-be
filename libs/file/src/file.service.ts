@@ -44,7 +44,10 @@ export class FileService {
       ContentType: contentType,
     });
     const expiresIn = 5 * 60; // 5 minutes
-    return getSignedUrl(this.s3Client, command, { expiresIn });
+    return getSignedUrl(this.s3Client, command, {
+      expiresIn,
+      signableHeaders: new Set(['content-type']),
+    });
   }
 
   // 공개 URL로 내보내면 안 되는 파일(제보 첨부 등)을 잠시 열람할 수 있는 URL
