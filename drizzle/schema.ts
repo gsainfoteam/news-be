@@ -118,7 +118,6 @@ export const comment = pgTable('comment', {
   deletedAt: timestamp('deleted_at'),
 });
 
-// 제보. 로그인 없이 받으므로 user를 참조하지 않는다
 export const report = pgTable('report', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
@@ -130,3 +129,18 @@ export const report = pgTable('report', {
   fileKeys: text('file_keys').array().default([]).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const categorySubscription = pgTable(
+  'category_subscription',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    category: category('category').$type<Category>().notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.category] }),
+    index('category_subscription_category_idx').on(table.category),
+  ],
+);

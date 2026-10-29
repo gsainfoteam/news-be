@@ -6,9 +6,16 @@ import { DrizzleModule } from '@lib/drizzle';
 import { ImageModule } from '@lib/image';
 import { MemberModule } from 'src/member/member.module';
 import { CommentModule } from 'src/comment/comment.module';
+import { SubscriptionModule } from 'src/subscription/subscription.module';
 
 @Module({
-  imports: [DrizzleModule, ImageModule, MemberModule, CommentModule],
+  imports: [
+    DrizzleModule,
+    ImageModule,
+    MemberModule,
+    CommentModule,
+    SubscriptionModule,
+  ],
   controllers: [ArticleController],
   providers: [ArticleService, ArticleRepository],
 })

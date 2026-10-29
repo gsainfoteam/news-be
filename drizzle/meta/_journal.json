@@ -50,6 +50,13 @@
       "when": 1792948828811,
       "tag": "0006_add_report",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793016163699,
+      "tag": "0007_add-category-subscription",
+      "breakpoints": true
     }
   ]
 }
