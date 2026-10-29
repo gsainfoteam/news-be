@@ -4,11 +4,10 @@ import { SubscriptionService } from './subscription.service';
 import { SubscriptionRepository } from './subscription.repository';
 import { DrizzleModule } from '@lib/drizzle';
 import { ImageModule } from '@lib/image';
-import { MailModule } from '@lib/mail';
-import { TemplatesModule } from '@lib/templates';
+import { StibeeModule } from '@lib/stibee';
 
 @Module({
-  imports: [DrizzleModule, ImageModule, MailModule, TemplatesModule],
+  imports: [DrizzleModule, ImageModule, StibeeModule],
   controllers: [SubscriptionController],
   providers: [SubscriptionService, SubscriptionRepository],
   exports: [SubscriptionService],

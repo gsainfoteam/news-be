@@ -20,10 +20,6 @@ const tailwindConfig = {
       colors: {
         primary: '#de3624',
         secondary: '#59625d',
-        'badge-default': '#525252',
-        'badge-red': '#c10007',
-        'badge-green': '#00a63e',
-        'badge-blue': '#1447e6',
       },
       fontFamily: {
         sans: [

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { setTimeout } from 'timers/promises';
 import { Loggable } from '@lib/logger';
 import {
   ArticleEntity,
@@ -8,11 +9,14 @@ import {
   UserEntity,
 } from '@lib/drizzle';
 import { ImageService } from '@lib/image';
-import { MailService } from '@lib/mail';
-import { TemplatesService } from '@lib/templates';
+import { StibeeService } from '@lib/stibee';
+import { badgeColorOf, CATEGORY_LABEL } from '@lib/templates';
 import { SubscriptionRepository } from './subscription.repository';
 import { SubscriptionDto } from './dto/res/subscription.dto';
 import { groupRecipientsByCategory } from './group-recipients';
+
+// 스티비 자동 이메일 API 제한이 초당 3회라 호출 사이를 띄운다
+const STIBEE_AUTO_EMAIL_INTERVAL_MS = 350;
 
 @Loggable()
 @Injectable()
@@ -22,8 +26,7 @@ export class SubscriptionService {
 
   constructor(
     private readonly subscriptionRepository: SubscriptionRepository,
-    private readonly mailService: MailService,
-    private readonly templatesService: TemplatesService,
+    private readonly stibeeService: StibeeService,
     private readonly configService: ConfigService,
     private readonly imageService: ImageService,
   ) {
@@ -37,11 +40,18 @@ export class SubscriptionService {
   }
 
   async subscribe(user: UserEntity, category: Category): Promise<void> {
+    await this.stibeeService.addSubscriber(user.email);
     await this.subscriptionRepository.subscribe(user.id, category);
   }
 
   async unsubscribe(user: UserEntity, category: Category): Promise<void> {
     await this.subscriptionRepository.unsubscribe(user.id, category);
+    const remaining = await this.subscriptionRepository.findSubscriptions(
+      user.id,
+    );
+    if (remaining.length === 0) {
+      await this.stibeeService.deleteSubscriber(user.email);
+    }
   }
 
   async notifyNewArticle({
@@ -57,33 +67,36 @@ export class SubscriptionService {
       );
       const groups = groupRecipientsByCategory(subscribers, article.categories);
       const imageKey = article.imageKeys?.[0];
-      const imageUrl = imageKey ? this.imageService.getUrl(imageKey) : null;
-      const publishedAt = article.createdAt
-        .toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
-        .replaceAll('-', '.');
+      const fields = {
+        title: article.title,
+        subtitle: article.subtitle ?? '',
+        authors: authors.map(({ name }) => name).join(', '),
+        publishedAt: article.createdAt
+          .toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
+          .replaceAll('-', '.'),
+        // 대표 이미지가 없으면 로고로 채운다.
+        // TODO: FE에 로고가 아직 배포되지 않아 경로를 가정함, FE 배포 후 확인할 것
+        imageUrl: imageKey
+          ? this.imageService.getUrl(imageKey)
+          : `${this.webUrl}/logo.png`,
+        // TODO: FE에 기사 페이지가 아직 없어 경로를 가정함, FE 라우트가 정해지면 맞출 것
+        articleUrl: `${this.webUrl}/article/${article.id}`,
+      };
 
       for (const [category, emails] of groups) {
-        const html = await this.templatesService.renderNewArticle({
-          category,
-          title: article.title,
-          subtitle: article.subtitle,
-          authors: authors.map(({ name }) => name).join(', '),
-          publishedAt,
-          imageUrl,
-          // TODO: FE에 기사/구독 설정 페이지가 아직 없어 경로를 가정함, FE 라우트가 정해지면 맞출 것
-          articleUrl: `${this.webUrl}/article/${article.id}`,
-          homeUrl: this.webUrl,
-          settingsUrl: `${this.webUrl}/subscription`,
-          logoUrl: `${this.webUrl}/logo.png`,
-        });
         for (const email of emails) {
-          await this.mailService
-            .sendEmail(email, article.title, html)
+          await this.stibeeService
+            .sendAutoEmail(email, {
+              ...fields,
+              category: CATEGORY_LABEL[category],
+              badgeColor: badgeColorOf(category),
+            })
             .catch((error) =>
               this.logger.error(
                 `failed to send article ${article.id} mail: ${error}`,
               ),
             );
+          await setTimeout(STIBEE_AUTO_EMAIL_INTERVAL_MS);
         }
       }
     } catch (error) {
