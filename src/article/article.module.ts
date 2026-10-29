@@ -3,7 +3,7 @@ import { ArticleController } from './article.controller';
 import { ArticleService } from './article.service';
 import { ArticleRepository } from './article.repository';
 import { DrizzleModule } from '@lib/drizzle';
-import { ImageModule } from '@lib/image';
+import { FileModule } from '@lib/file';
 import { MemberModule } from 'src/member/member.module';
 import { CommentModule } from 'src/comment/comment.module';
 import { SubscriptionModule } from 'src/subscription/subscription.module';
@@ -11,7 +11,7 @@ import { SubscriptionModule } from 'src/subscription/subscription.module';
 @Module({
   imports: [
     DrizzleModule,
-    ImageModule,
+    FileModule,
     MemberModule,
     CommentModule,
     SubscriptionModule,

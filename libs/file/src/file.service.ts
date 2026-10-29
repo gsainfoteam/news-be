@@ -12,7 +12,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Loggable()
 @Injectable()
-export class ImageService {
+export class FileService {
   private readonly s3Client: S3Client;
   private readonly s3Url: string;
   constructor(private readonly configService: ConfigService) {

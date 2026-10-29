@@ -5,7 +5,7 @@ import { CreateArticleDto } from './dto/req/create-article.dto';
 import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import * as crypto from 'crypto';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
-import { ImageService } from '@lib/image';
+import { FileService } from '@lib/file';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
 import { GetArticleDto } from './dto/req/get-article.dto';
@@ -17,7 +17,7 @@ import { SubscriptionService } from 'src/subscription/subscription.service';
 export class ArticleService {
   constructor(
     private readonly articleRepository: ArticleRepository,
-    private readonly imageService: ImageService,
+    private readonly fileService: FileService,
     private readonly commentService: CommentService,
     private readonly subscriptionService: SubscriptionService,
   ) {}
@@ -32,7 +32,7 @@ export class ArticleService {
   async createArticle(body: CreateArticleDto): Promise<ArticleDto> {
     if (body.imageKeys) {
       await Promise.all(
-        body.imageKeys.map((key) => this.imageService.verifyFileExist(key)),
+        body.imageKeys.map((key) => this.fileService.verifyFileExist(key)),
       );
     }
 
@@ -58,12 +58,12 @@ export class ArticleService {
     }
 
     return {
-      uploadUrl: await this.imageService.createPresignedUrl(
+      uploadUrl: await this.fileService.createPresignedUrl(
         key,
         body.contentLength,
         contentType,
       ),
-      publicUrl: this.imageService.getUrl(key),
+      publicUrl: this.fileService.getUrl(key),
       key,
     };
   }
@@ -84,7 +84,7 @@ export class ArticleService {
   async updateArticle(id: number, body: UpdateArticleDto): Promise<ArticleDto> {
     if (body.imageKeys) {
       await Promise.all(
-        body.imageKeys.map((key) => this.imageService.verifyFileExist(key)),
+        body.imageKeys.map((key) => this.fileService.verifyFileExist(key)),
       );
     }
 

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ReportEntity } from '@lib/drizzle';
-import { ImageService } from '@lib/image';
+import { FileService } from '@lib/file';
 import { Loggable } from '@lib/logger';
 import { ReportRepository } from './report.repository';
 import { CreateReportDto } from './dto/req/create-report.dto';
@@ -17,7 +17,7 @@ import { REPORT_FILE_CONTENT_TYPES } from './report.policy';
 export class ReportService {
   constructor(
     private readonly reportRepository: ReportRepository,
-    private readonly imageService: ImageService,
+    private readonly fileService: FileService,
   ) {}
 
   async getUploadUrl({
@@ -32,7 +32,7 @@ export class ReportService {
     // 키를 추측할 수 없도록 서버에서 UUID 경로를 만든다
     const key = `report/${randomUUID()}/${fileName}`;
     return new ReportUploadUrlDto(
-      await this.imageService.createPresignedUrl(
+      await this.fileService.createPresignedUrl(
         key,
         contentLength,
         contentType,
@@ -44,7 +44,7 @@ export class ReportService {
   async createReport(body: CreateReportDto): Promise<void> {
     if (body.fileKeys) {
       await Promise.all(
-        body.fileKeys.map((key) => this.imageService.verifyFileExist(key)),
+        body.fileKeys.map((key) => this.fileService.verifyFileExist(key)),
       );
     }
     await this.reportRepository.createReport(body);
@@ -69,7 +69,7 @@ export class ReportService {
     const files = await Promise.all(
       report.fileKeys.map(async (key) => ({
         name: key.split('/').pop() ?? key,
-        url: await this.imageService.createPresignedGetUrl(key),
+        url: await this.fileService.createPresignedGetUrl(key),
       })),
     );
     return new ReportDto(report, files);

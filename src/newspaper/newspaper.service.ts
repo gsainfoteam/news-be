@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { ImageService } from '@lib/image';
+import { FileService } from '@lib/file';
 import { Loggable } from '@lib/logger';
 import { NewspaperRepository } from './newspaper.repository';
 import { CreateNewspaperDto } from './dto/req/create-newspaper.dto';
@@ -15,7 +15,7 @@ import { NewspaperUploadUrlDto } from './dto/res/newspaper-upload-url.dto';
 export class NewspaperService {
   constructor(
     private readonly newspaperRepository: NewspaperRepository,
-    private readonly imageService: ImageService,
+    private readonly fileService: FileService,
   ) {}
 
   async getUploadUrl({
@@ -24,7 +24,7 @@ export class NewspaperService {
   }: CreateNewspaperFileUrlDto): Promise<NewspaperUploadUrlDto> {
     const key = `newspaper/${randomUUID()}/${fileName}`;
     return new NewspaperUploadUrlDto(
-      await this.imageService.createPresignedUrl(
+      await this.fileService.createPresignedUrl(
         key,
         contentLength,
         'application/pdf',
@@ -34,11 +34,11 @@ export class NewspaperService {
   }
 
   async createNewspaper(body: CreateNewspaperDto): Promise<NewspaperDto> {
-    await this.imageService.verifyFileExist(body.fileKey);
+    await this.fileService.verifyFileExist(body.fileKey);
     const newspaper = await this.newspaperRepository.createNewspaper(body);
     return new NewspaperDto(
       newspaper,
-      this.imageService.getUrl(newspaper.fileKey),
+      this.fileService.getUrl(newspaper.fileKey),
     );
   }
 
@@ -52,7 +52,7 @@ export class NewspaperService {
         (newspaper) =>
           new NewspaperDto(
             newspaper,
-            this.imageService.getUrl(newspaper.fileKey),
+            this.fileService.getUrl(newspaper.fileKey),
           ),
       ),
       count,
