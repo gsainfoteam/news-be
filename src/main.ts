@@ -103,7 +103,10 @@ async function bootstrap() {
     )
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    // FE(hey-api)에서 생성되는 함수 이름을 메서드 이름 그대로 쓰기 위함
+    operationIdFactory: (_controllerKey, methodKey) => methodKey,
+  });
   SwaggerModule.setup('api', app, document, {
     swaggerOptions: {
       displayRequestDuration: true,

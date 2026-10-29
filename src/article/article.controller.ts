@@ -84,7 +84,7 @@ export class ArticleController {
   @ApiBearerAuth('jwt')
   @UseGuards(MemberGuard)
   @Post('image')
-  async getUploadUrl(
+  async getArticleImageUploadUrl(
     @Body() body: CreatePresignedUrlDto,
   ): Promise<UploadUrlInfoDto> {
     return await this.articleService.getUploadUrl(body);

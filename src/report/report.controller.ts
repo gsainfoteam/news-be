@@ -53,7 +53,7 @@ export class ReportController {
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @UseGuards(ThrottlerGuard)
   @Post('file')
-  async getUploadUrl(
+  async getReportFileUploadUrl(
     @Body() body: CreateReportFileUrlDto,
   ): Promise<ReportUploadUrlDto> {
     return await this.reportService.getUploadUrl(body);
