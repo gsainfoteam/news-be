@@ -5,3 +5,4 @@ export * from './article.entity';
 export * from './article-author.entity';
 export * from './comment.entity';
 export * from './report.entity';
+export * from './newspaper.entity';

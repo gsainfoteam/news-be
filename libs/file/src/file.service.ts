@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Loggable } from '@lib/logger';
 import { ConfigService } from '@nestjs/config';
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -12,9 +13,10 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Loggable()
 @Injectable()
-export class ImageService {
+export class FileService {
   private readonly s3Client: S3Client;
   private readonly s3Url: string;
+  private readonly bucket: string;
   constructor(private readonly configService: ConfigService) {
     this.s3Client = new S3Client({
       region: configService.getOrThrow<string>('AWS_REGION'),
@@ -25,7 +27,8 @@ export class ImageService {
         ),
       },
     });
-    this.s3Url = `https://s3.${this.configService.getOrThrow<string>('AWS_REGION')}.amazonaws.com/${this.configService.getOrThrow<string>('AWS_S3_BUCKET')}/`;
+    this.bucket = configService.getOrThrow<string>('AWS_S3_BUCKET');
+    this.s3Url = `https://s3.${this.configService.getOrThrow<string>('AWS_REGION')}.amazonaws.com/${this.bucket}/`;
   }
 
   getUrl(key: string): string {
@@ -38,28 +41,40 @@ export class ImageService {
     contentType: string,
   ): Promise<string> {
     const command = new PutObjectCommand({
-      Bucket: this.configService.getOrThrow<string>('AWS_S3_BUCKET'),
+      Bucket: this.bucket,
       Key: key,
       ContentLength: length,
       ContentType: contentType,
     });
     const expiresIn = 5 * 60; // 5 minutes
-    return getSignedUrl(this.s3Client, command, { expiresIn });
+    return await getSignedUrl(this.s3Client, command, {
+      expiresIn,
+      signableHeaders: new Set(['content-type']),
+    });
   }
 
   // 공개 URL로 내보내면 안 되는 파일(제보 첨부 등)을 잠시 열람할 수 있는 URL
   async createPresignedGetUrl(key: string): Promise<string> {
     const command = new GetObjectCommand({
-      Bucket: this.configService.getOrThrow<string>('AWS_S3_BUCKET'),
+      Bucket: this.bucket,
       Key: key,
     });
     const expiresIn = 10 * 60; // 10 minutes
-    return getSignedUrl(this.s3Client, command, { expiresIn });
+    return await getSignedUrl(this.s3Client, command, { expiresIn });
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    await this.s3Client.send(
+      new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      }),
+    );
   }
 
   async verifyFileExist(key: string): Promise<boolean> {
     const command = new HeadObjectCommand({
-      Bucket: this.configService.getOrThrow<string>('AWS_S3_BUCKET'),
+      Bucket: this.bucket,
       Key: key,
     });
 

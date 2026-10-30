@@ -4,7 +4,7 @@ import { IsInt, IsNumber, IsString, Matches, Min } from 'class-validator';
 export class CreatePresignedUrlDto {
   @ApiProperty({
     description:
-      'File name of the image to be uploaded (only letters, numbers, hyphens, underscores, and dots allowed)',
+      'File name of the image to be uploaded (only letters, numbers, hyphens, underscores, and dots allowed. Allowed extensions: png, jpg, jpeg, gif, webp)',
     example: 'image_1.png',
   })
   @IsString()

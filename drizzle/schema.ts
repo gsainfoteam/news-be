@@ -144,3 +144,11 @@ export const categorySubscription = pgTable(
     index('category_subscription_category_idx').on(table.category),
   ],
 );
+
+export const newspaper = pgTable('newspaper', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  fileKey: text('file_key').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

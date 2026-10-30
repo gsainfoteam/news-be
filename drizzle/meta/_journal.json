@@ -64,6 +64,13 @@
       "when": 1793285044382,
       "tag": "0008_add-notice-category",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793330622832,
+      "tag": "0009_add-newspaper",
+      "breakpoints": true
     }
   ]
 }

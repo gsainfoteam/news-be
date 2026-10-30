@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
@@ -78,6 +79,7 @@ export class ArticleController {
       'The presigned URL and public URL have been successfully retrieved.',
     type: UploadUrlInfoDto,
   })
+  @ApiBadRequestResponse({ description: 'File extension is not allowed' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })

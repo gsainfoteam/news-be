@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ArticleRepository } from './article.repository';
 import { ArticleDto } from './dto/res/article.dto';
 import { CreateArticleDto } from './dto/req/create-article.dto';
 import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import * as crypto from 'crypto';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
-import { ImageService } from '@lib/image';
+import { FileService } from '@lib/file';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
 import { GetArticleDto } from './dto/req/get-article.dto';
@@ -17,7 +17,7 @@ import { SubscriptionService } from 'src/subscription/subscription.service';
 export class ArticleService {
   constructor(
     private readonly articleRepository: ArticleRepository,
-    private readonly imageService: ImageService,
+    private readonly fileService: FileService,
     private readonly commentService: CommentService,
     private readonly subscriptionService: SubscriptionService,
   ) {}
@@ -32,7 +32,7 @@ export class ArticleService {
   async createArticle(body: CreateArticleDto): Promise<ArticleDto> {
     if (body.imageKeys) {
       await Promise.all(
-        body.imageKeys.map((key) => this.imageService.verifyFileExist(key)),
+        body.imageKeys.map((key) => this.fileService.verifyFileExist(key)),
       );
     }
 
@@ -46,7 +46,7 @@ export class ArticleService {
     const key = `articles/${new Date().toISOString().split('T')[0]}/${crypto.randomBytes(16).toString('base64url')}-${body.fileName}`;
     const ext = body.fileName.split('.').pop()?.toLowerCase();
 
-    let contentType = 'application/octet-stream';
+    let contentType: string;
     if (ext === 'png') {
       contentType = 'image/png';
     } else if (ext === 'jpg' || ext === 'jpeg') {
@@ -55,15 +55,18 @@ export class ArticleService {
       contentType = 'image/gif';
     } else if (ext === 'webp') {
       contentType = 'image/webp';
+    } else {
+      throw new BadRequestException(`File extension .${ext} is not allowed`);
     }
 
     return {
-      uploadUrl: await this.imageService.createPresignedUrl(
+      uploadUrl: await this.fileService.createPresignedUrl(
         key,
         body.contentLength,
         contentType,
       ),
-      publicUrl: this.imageService.getUrl(key),
+      contentType,
+      publicUrl: this.fileService.getUrl(key),
       key,
     };
   }
@@ -84,7 +87,7 @@ export class ArticleService {
   async updateArticle(id: number, body: UpdateArticleDto): Promise<ArticleDto> {
     if (body.imageKeys) {
       await Promise.all(
-        body.imageKeys.map((key) => this.imageService.verifyFileExist(key)),
+        body.imageKeys.map((key) => this.fileService.verifyFileExist(key)),
       );
     }
 
