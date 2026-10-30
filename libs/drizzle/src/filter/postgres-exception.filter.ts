@@ -1,6 +1,7 @@
 import { Catch, ArgumentsHost, HttpStatus, Logger } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Response } from 'express';
+import { DrizzleQueryError } from 'drizzle-orm';
 
 interface PostgresError extends Error {
   code: string;
@@ -20,7 +21,9 @@ function isPostgresError(error: unknown): error is PostgresError {
 export class PostgresExceptionFilter extends BaseExceptionFilter {
   private readonly logger = new Logger(PostgresExceptionFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(error: unknown, host: ArgumentsHost) {
+    const exception = error instanceof DrizzleQueryError ? error.cause : error;
+
     // Check if it's a PostgresError (they usually have a 'code' and 'detail' property)
     if (isPostgresError(exception) && exception.code.length === 5) {
       const ctx = host.switchToHttp();
@@ -55,6 +58,6 @@ export class PostgresExceptionFilter extends BaseExceptionFilter {
     }
 
     // If it's not a Postgres error, delegate to the default NestJS exception handler
-    super.catch(exception, host);
+    super.catch(error, host);
   }
 }
