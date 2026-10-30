@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { FileService } from '@lib/file';
 import { Loggable } from '@lib/logger';
@@ -6,6 +6,7 @@ import { NewspaperRepository } from './newspaper.repository';
 import { CreateNewspaperDto } from './dto/req/create-newspaper.dto';
 import { CreateNewspaperFileUrlDto } from './dto/req/create-newspaper-file-url.dto';
 import { SearchNewspapersDto } from './dto/req/search-newspapers.dto';
+import { UpdateNewspaperDto } from './dto/req/update-newspaper.dto';
 import { NewspaperDto } from './dto/res/newspaper.dto';
 import { NewspaperListDto } from './dto/res/newspaper-list.dto';
 import { NewspaperUploadUrlDto } from './dto/res/newspaper-upload-url.dto';
@@ -13,6 +14,8 @@ import { NewspaperUploadUrlDto } from './dto/res/newspaper-upload-url.dto';
 @Loggable()
 @Injectable()
 export class NewspaperService {
+  private readonly logger = new Logger(NewspaperService.name);
+
   constructor(
     private readonly newspaperRepository: NewspaperRepository,
     private readonly fileService: FileService,
@@ -60,7 +63,33 @@ export class NewspaperService {
     );
   }
 
+  async updateNewspaper(
+    id: number,
+    body: UpdateNewspaperDto,
+  ): Promise<NewspaperDto> {
+    const before = await this.newspaperRepository.getNewspaper(id);
+    if (body.fileKey) await this.fileService.verifyFileExist(body.fileKey);
+
+    const newspaper = await this.newspaperRepository.updateNewspaper(id, body);
+    if (newspaper.fileKey !== before.fileKey)
+      await this.removeFile(before.fileKey);
+
+    return new NewspaperDto(
+      newspaper,
+      this.fileService.getUrl(newspaper.fileKey),
+    );
+  }
+
   async deleteNewspaper(id: number): Promise<void> {
-    await this.newspaperRepository.deleteNewspaper(id);
+    const { fileKey } = await this.newspaperRepository.deleteNewspaper(id);
+    await this.removeFile(fileKey);
+  }
+
+  private async removeFile(key: string): Promise<void> {
+    await this.fileService
+      .deleteFile(key)
+      .catch((error) =>
+        this.logger.error(`Failed to delete newspaper file ${key}`, error),
+      );
   }
 }

@@ -3,4 +3,5 @@ export class NewspaperEntity {
   title!: string;
   fileKey!: string;
   createdAt!: Date;
+  updatedAt!: Date;
 }

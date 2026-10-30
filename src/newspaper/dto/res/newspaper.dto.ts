@@ -32,6 +32,13 @@ export class NewspaperDto {
   @Expose()
   createdAt!: Date;
 
+  @ApiProperty({
+    description: 'updated at',
+    example: '2025-01-01T00:00:00.000Z',
+  })
+  @Expose()
+  updatedAt!: Date;
+
   constructor(newspaper: NewspaperEntity, url: string) {
     Object.assign(this, newspaper);
     this.url = url;

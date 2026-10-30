@@ -1,5 +1,5 @@
 {
-  "id": "5e645f94-519b-44f6-aaf6-90676f80eaeb",
+  "id": "7e84c4db-cf25-4a1e-8e33-b749de14c4c3",
   "prevId": "e7dafe51-ca3d-4289-b582-b1b9c33b6627",
   "version": "7",
   "dialect": "postgresql",
@@ -451,12 +451,27 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "newspaper_file_key_unique": {
+          "name": "newspaper_file_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "file_key"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

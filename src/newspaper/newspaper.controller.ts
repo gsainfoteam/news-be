@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -12,6 +13,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
@@ -26,6 +28,7 @@ import { NewspaperService } from './newspaper.service';
 import { CreateNewspaperDto } from './dto/req/create-newspaper.dto';
 import { CreateNewspaperFileUrlDto } from './dto/req/create-newspaper-file-url.dto';
 import { SearchNewspapersDto } from './dto/req/search-newspapers.dto';
+import { UpdateNewspaperDto } from './dto/req/update-newspaper.dto';
 import { NewspaperDto } from './dto/res/newspaper.dto';
 import { NewspaperListDto } from './dto/res/newspaper-list.dto';
 import { NewspaperUploadUrlDto } from './dto/res/newspaper-upload-url.dto';
@@ -86,6 +89,7 @@ export class NewspaperController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiForbiddenResponse({ description: 'Forbidden' })
   @ApiNotFoundResponse({ description: 'The file was not uploaded' })
+  @ApiConflictResponse({ description: 'The file is already registered' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @ApiBearerAuth('jwt')
   @UseGuards(MemberGuard)
@@ -97,8 +101,35 @@ export class NewspaperController {
   }
 
   @ApiOperation({
+    summary: 'Update Newspaper',
+    description:
+      '[Author: Editor] Update a newspaper. To replace the PDF, upload a new file with `POST /newspaper/file` and pass its key; the old file is deleted.',
+  })
+  @ApiOkResponse({
+    description: 'The newspaper has been successfully updated.',
+    type: NewspaperDto,
+  })
+  @ApiBadRequestResponse({ description: 'Invalid input' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiNotFoundResponse({
+    description: 'Newspaper not found or the new file was not uploaded',
+  })
+  @ApiConflictResponse({ description: 'The file is already registered' })
+  @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
+  @ApiBearerAuth('jwt')
+  @UseGuards(MemberGuard)
+  @Patch(':id')
+  async updateNewspaper(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateNewspaperDto,
+  ): Promise<NewspaperDto> {
+    return await this.newspaperService.updateNewspaper(id, body);
+  }
+
+  @ApiOperation({
     summary: 'Delete Newspaper',
-    description: '[Author: Editor] Delete a newspaper.',
+    description: '[Author: Editor] Delete a newspaper and its PDF file.',
   })
   @ApiOkResponse({
     description: 'The newspaper has been successfully deleted.',
