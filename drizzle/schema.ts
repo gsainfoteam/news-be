@@ -10,6 +10,7 @@ import {
   text,
   timestamp,
   integer,
+  date,
 } from 'drizzle-orm/pg-core';
 
 export const category = pgEnum(
@@ -151,4 +152,25 @@ export const newspaper = pgTable('newspaper', {
   fileKey: text('file_key').notNull().unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// 신문사 소개. 항상 한 행만 유지한다
+export const about = pgTable('about', {
+  id: serial('id').primaryKey(),
+  introduction: text('introduction').notNull(),
+  foundedAt: date('founded_at').notNull(),
+  publisher: text('publisher').notNull(),
+  director: text('director').notNull(),
+  editorInChief: text('editor_in_chief').notNull(),
+  address: text('address').notNull(),
+  email: text('email').notNull(),
+  homepage: text('homepage').notNull(),
+  instagram: text('instagram').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const history = pgTable('history', {
+  id: serial('id').primaryKey(),
+  date: date('date').notNull(),
+  content: text('content').notNull(),
 });

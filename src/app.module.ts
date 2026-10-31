@@ -11,6 +11,7 @@ import { CommentModule } from './comment/comment.module';
 import { ReportModule } from './report/report.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { NewspaperModule } from './newspaper/newspaper.module';
+import { AboutModule } from './about/about.module';
 import { PostgresExceptionFilter } from '@lib/drizzle';
 
 @Module({
@@ -25,6 +26,7 @@ import { PostgresExceptionFilter } from '@lib/drizzle';
     ReportModule,
     SubscriptionModule,
     NewspaperModule,
+    AboutModule,
     HealthModule,
   ],
   providers: [
