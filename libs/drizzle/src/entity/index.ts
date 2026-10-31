@@ -6,3 +6,5 @@ export * from './article-author.entity';
 export * from './comment.entity';
 export * from './report.entity';
 export * from './newspaper.entity';
+export * from './about.entity';
+export * from './history.entity';
