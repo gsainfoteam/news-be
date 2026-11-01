@@ -1,5 +1,6 @@
 import { Category } from '@lib/drizzle';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   ArrayNotEmpty,
   ArrayUnique,
@@ -41,6 +42,17 @@ export class CreateArticleDto {
   @IsArray()
   @IsString({ each: true })
   imageKeys?: string[];
+
+  @ApiPropertyOptional({
+    description: 'thumbnail image key (must be one of imageKeys)',
+    type: String,
+    nullable: true,
+    example: 'image1.jpg',
+  })
+  @Transform(({ value }: { value: unknown }) => (value === '' ? null : value))
+  @IsOptional()
+  @IsString()
+  thumbnailKey?: string | null;
 
   @ApiProperty({
     description: 'categories',

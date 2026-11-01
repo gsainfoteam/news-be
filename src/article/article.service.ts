@@ -27,7 +27,15 @@ export class ArticleService {
       this.articleRepository.getArticles(query),
       this.articleRepository.countArticles(query),
     ]);
-    return new ArticleListDto(articles, count);
+    return new ArticleListDto(
+      articles.map((value) => ({
+        ...value,
+        thumbnailUrl:
+          value.article.thumbnailKey &&
+          this.fileService.getUrl(value.article.thumbnailKey),
+      })),
+      count,
+    );
   }
   async createArticle(body: CreateArticleDto): Promise<ArticleDto> {
     if (body.imageKeys) {
@@ -35,11 +43,22 @@ export class ArticleService {
         body.imageKeys.map((key) => this.fileService.verifyFileExist(key)),
       );
     }
+    if (
+      body.thumbnailKey != null &&
+      !body.imageKeys?.includes(body.thumbnailKey)
+    ) {
+      throw new BadRequestException('thumbnailKey must be one of imageKeys');
+    }
 
     const article = await this.articleRepository.createArticle(body);
     const result = await this.articleRepository.getArticle(article.id);
     void this.subscriptionService.notifyNewArticle(result);
-    return new ArticleDto(result);
+    return new ArticleDto({
+      ...result,
+      thumbnailUrl:
+        result.article.thumbnailKey &&
+        this.fileService.getUrl(result.article.thumbnailKey),
+    });
   }
 
   async getUploadUrl(body: CreatePresignedUrlDto): Promise<UploadUrlInfoDto> {
@@ -81,7 +100,13 @@ export class ArticleService {
       this.articleRepository.getArticle(id),
       this.commentService.getCommentsByArticle(id),
     ]);
-    return new ArticleDto({ ...article, comments });
+    return new ArticleDto({
+      ...article,
+      comments,
+      thumbnailUrl:
+        article.article.thumbnailKey &&
+        this.fileService.getUrl(article.article.thumbnailKey),
+    });
   }
 
   async updateArticle(id: number, body: UpdateArticleDto): Promise<ArticleDto> {
@@ -90,10 +115,30 @@ export class ArticleService {
         body.imageKeys.map((key) => this.fileService.verifyFileExist(key)),
       );
     }
+    if (body.imageKeys !== undefined || body.thumbnailKey !== undefined) {
+      const { article: current } = await this.articleRepository.getArticle(id);
+      const thumbnailKey =
+        body.thumbnailKey === undefined
+          ? current.thumbnailKey
+          : body.thumbnailKey;
+      if (
+        thumbnailKey != null &&
+        !(
+          body.imageKeys === undefined ? current.imageKeys : body.imageKeys
+        )?.includes(thumbnailKey)
+      ) {
+        throw new BadRequestException('thumbnailKey must be one of imageKeys');
+      }
+    }
 
     await this.articleRepository.updateArticle(id, body);
     const article = await this.articleRepository.getArticle(id);
-    return new ArticleDto(article);
+    return new ArticleDto({
+      ...article,
+      thumbnailUrl:
+        article.article.thumbnailKey &&
+        this.fileService.getUrl(article.article.thumbnailKey),
+    });
   }
 
   async deleteArticle(id: number): Promise<void> {

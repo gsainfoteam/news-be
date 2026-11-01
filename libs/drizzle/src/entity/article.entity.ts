@@ -6,6 +6,7 @@ export class ArticleEntity {
   subtitle!: string | null;
   content!: string;
   imageKeys!: string[] | null;
+  thumbnailKey!: string | null;
   views!: number;
   categories!: Category[];
   createdAt!: Date;
