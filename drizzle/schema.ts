@@ -80,6 +80,7 @@ export const article = pgTable('article', {
   subtitle: text('subtitle'),
   content: text('content').notNull(),
   imageKeys: text('image_keys').array(),
+  thumbnailKey: text('thumbnail_key'),
   views: integer('views').default(0).notNull(),
   categories: category('categories').array().$type<Category[]>().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

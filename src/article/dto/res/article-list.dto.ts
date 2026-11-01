@@ -20,7 +20,11 @@ export class ArticleListDto {
   count: number;
 
   constructor(
-    articles: { article: ArticleEntity; authors: MemberEntity[] }[],
+    articles: {
+      article: ArticleEntity;
+      authors: MemberEntity[];
+      thumbnailUrl: string | null;
+    }[],
     count: number,
   ) {
     this.articles = articles.map((article) => new ArticleDto(article));

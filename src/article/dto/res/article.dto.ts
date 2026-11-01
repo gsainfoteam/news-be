@@ -56,6 +56,16 @@ export class ArticleDto {
   @Expose()
   content!: string;
 
+  @ApiPropertyOptional({
+    description: 'thumbnail image public url',
+    type: String,
+    nullable: true,
+    example:
+      'https://s3.ap-northeast-2.amazonaws.com/bucket/articles/image1.jpg',
+  })
+  @Expose()
+  thumbnailUrl!: string | null;
+
   @ApiProperty({
     description: 'views',
     example: 100,
@@ -104,12 +114,15 @@ export class ArticleDto {
     article,
     authors,
     comments = [],
+    thumbnailUrl,
   }: {
     article: ArticleEntity;
     authors: MemberEntity[];
     comments?: CommentDto[];
+    thumbnailUrl: string | null;
   }) {
     Object.assign(this, article);
+    this.thumbnailUrl = thumbnailUrl;
     this.authors = authors.map((author) => new AuthorInfoDto(author));
     this.comments = comments;
   }

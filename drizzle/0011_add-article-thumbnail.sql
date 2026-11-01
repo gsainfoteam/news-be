@@ -1,0 +1,1 @@
+ALTER TABLE "article" ADD COLUMN "thumbnail_key" text;
