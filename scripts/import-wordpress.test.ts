@@ -1,5 +1,6 @@
 import { Category } from '../libs/drizzle/src/enum';
 import {
+  cleanContent,
   decodeEntities,
   formatName,
   fromGmt,
@@ -67,6 +68,33 @@ describe('toCategories', () => {
   test('skips newspaper PDF posts', () => {
     expect(toCategories(['pdf'])).toBeNull();
     expect(toCategories(['pdf', 'notice'])).toEqual([Category.NOTICE]);
+  });
+});
+
+describe('cleanContent', () => {
+  test('turns a Jetpack slideshow into figures', () => {
+    const gallery =
+      '<p class="jetpack-slideshow-noscript robots-nocontent">JS 필요</p><div class="jetpack-slideshow" data-gallery="[{&quot;src&quot;:&quot;https:\\/\\/i0.wp.com\\/gistnews.co.kr\\/a.jpg?fit=696\\u0026ssl=1&quot;,&quot;alt&quot;:&quot;&quot;,&quot;caption&quot;:&quot;사진 &lt;1&gt;&quot;}]" itemscope></div>';
+    expect(cleanContent(gallery, new Set())).toBe(
+      '<figure><img src="https://i0.wp.com/gistnews.co.kr/a.jpg?fit=696&amp;ssl=1" alt=""><figcaption>사진 &lt;1&gt;</figcaption></figure>',
+    );
+  });
+
+  test('points links to imported posts at the new article page', () => {
+    const html =
+      '<a href="http://giscatch.co.kr/?p=928">a</a><a href="https://gistnews.co.kr/?p=5">b</a><a href="https://example.com/?p=928">c</a>';
+    expect(cleanContent(html, new Set([928]))).toBe(
+      '<a href="/article/928">a</a><a href="https://gistnews.co.kr/?p=5">b</a><a href="https://example.com/?p=928">c</a>',
+    );
+  });
+
+  test('collapses runs of spacer paragraphs and drops srcset', () => {
+    expect(
+      cleanContent(
+        '<p>a</p><p>&nbsp;</p>\n<p>&nbsp;</p>\n<p> </p><img src="x.jpg" srcset="x-300.jpg 300w" sizes="100vw"><p>&nbsp;</p>',
+        new Set(),
+      ),
+    ).toBe('<p>a</p><p>&nbsp;</p>\n<img src="x.jpg"><p>&nbsp;</p>');
   });
 });
 

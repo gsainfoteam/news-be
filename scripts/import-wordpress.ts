@@ -40,6 +40,8 @@ const SITE_HOSTS = new Set([
   'giscatch.co.kr',
   'www.giscatch.co.kr',
 ]);
+// Early posts link files through the server's bare IP.
+const LEGACY_SERVER_IP = '101.101.219.43';
 const FILE_EXTENSIONS = new Set(
   'jpg jpeg png gif webp bmp pdf hwp hwpx doc docx ppt pptx xls xlsx zip'.split(
     ' ',
@@ -111,6 +113,7 @@ export function toSourceUrl(raw: string): URL | null {
     const [, host, ...rest] = url.pathname.split('/');
     url = new URL(`https://${host}/${rest.join('/')}`);
   }
+  if (url.hostname === LEGACY_SERVER_IP) url.hostname = 'gistnews.co.kr';
   const ext = url.pathname.split('.').pop()?.toLowerCase() ?? '';
   if (!SITE_HOSTS.has(url.hostname) || !FILE_EXTENSIONS.has(ext)) return null;
   url.search = '';
@@ -122,6 +125,49 @@ export function toSourceUrl(raw: string): URL | null {
     '/wp-content/',
   );
   return url;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+type JetpackSlide = { src: string; alt?: string; caption?: string };
+
+// Normalizes markup the FE can't render: Jetpack slideshows keep their images in a JSON
+// attribute, old post links point at WordPress, and spacer paragraphs pile up.
+export function cleanContent(html: string, articleIds: Set<number>): string {
+  return html
+    .replace(/\s(srcset|sizes)=(["']).*?\2/g, '')
+    .replace(/<p class="jetpack-slideshow-noscript[^"]*">.*?<\/p>/g, '')
+    .replace(
+      /<div[^>]*\bdata-gallery=(["'])(.*?)\1[^>]*><\/div>/g,
+      (_, _quote, json: string) =>
+        (JSON.parse(decodeEntities(json)) as JetpackSlide[])
+          .map(
+            ({ src, alt, caption }) =>
+              `<figure><img src="${escapeHtml(src)}" alt="${escapeHtml(alt ?? '')}">${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ''}</figure>`,
+          )
+          .join(''),
+    )
+    .replace(/\bhref=(["'])(.*?)\1/g, (match, quote: string, raw: string) => {
+      let url: URL;
+      try {
+        url = new URL(decodeEntities(raw));
+      } catch {
+        return match;
+      }
+      const id = Number(url.searchParams.get('p'));
+      const isPostLink =
+        (SITE_HOSTS.has(url.hostname) || url.hostname === LEGACY_SERVER_IP) &&
+        url.pathname === '/' &&
+        articleIds.has(id);
+      return isPostLink ? `href=${quote}/article/${id}${quote}` : match;
+    })
+    .replace(/(<p>(&nbsp;|\s)*<\/p>\s*){2,}/g, '<p>&nbsp;</p>\n');
 }
 
 // WordPress *_gmt fields are UTC without an offset.
@@ -254,10 +300,7 @@ async function main() {
 
   // Moves WordPress-hosted files to S3; files that fail keep their original URL.
   async function migrateFiles(post: WpPost) {
-    const html = post.content.rendered.replace(
-      /\s(srcset|sizes)=(["']).*?\2/g,
-      '',
-    );
+    const html = cleanContent(post.content.rendered, importableIds);
     const attrPattern = /\b(src|href)=(["'])(.*?)\2/g;
     const sources = [...html.matchAll(attrPattern)].flatMap(
       (match) => toSourceUrl(match[3]) ?? [],
@@ -310,6 +353,16 @@ async function main() {
     ).map((row) => row.id),
   );
 
+  const categoriesOf = (post: WpPost) =>
+    post.id < MIN_POST_ID || post.content.protected
+      ? null
+      : toCategories(
+          post.categories.flatMap((id) => categorySlugById.get(id) ?? []),
+        );
+  const importableIds = new Set(
+    posts.filter((post) => categoriesOf(post)).map((post) => post.id),
+  );
+
   let imported = 0;
   let skipped = 0;
   let conflicts = 0;
@@ -318,10 +371,8 @@ async function main() {
       conflicts++;
       return;
     }
-    const categoryList = toCategories(
-      post.categories.flatMap((id) => categorySlugById.get(id) ?? []),
-    );
-    if (post.id < MIN_POST_ID || post.content.protected || !categoryList) {
+    const categoryList = categoriesOf(post);
+    if (!categoryList) {
       skipped++;
       return;
     }
