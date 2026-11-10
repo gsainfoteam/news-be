@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '../drizzle/schema';
@@ -185,7 +185,9 @@ async function main() {
       const [found] = await db
         .select({ id: schema.member.id })
         .from(schema.member)
-        .where(eq(schema.member.email, email))
+        .where(
+          and(eq(schema.member.email, email), isNull(schema.member.deletedAt)),
+        )
         .limit(1);
       if (found) return found.id;
       const [created] = await db
@@ -212,16 +214,24 @@ async function main() {
     if (cached) return cached;
     const upload = (async () => {
       // Dead WordPress links are kept as is; an S3 failure aborts the run instead.
-      const res = await fetch(source).catch((error: Error) => error);
-      if (res instanceof Error || !res.ok) {
+      // Redirects are refused so a download can't leave the allowlisted hosts.
+      const res = await fetch(source, { redirect: 'error' }).catch(
+        (error: Error) => error,
+      );
+      const contentType =
+        (!(res instanceof Error) && res.headers.get('content-type')) ||
+        'application/octet-stream';
+      if (
+        res instanceof Error ||
+        !res.ok ||
+        contentType.startsWith('text/html')
+      ) {
         failedUrls.push(
-          `${source.href} (${res instanceof Error ? res.message : res.status})`,
+          `${source.href} (${res instanceof Error ? res.message : `${res.status} ${contentType}`})`,
         );
         return null;
       }
       const body = new Uint8Array(await res.arrayBuffer());
-      const contentType =
-        res.headers.get('content-type') ?? 'application/octet-stream';
       const ext = source.pathname.split('.').pop()!.toLowerCase();
       const hash = createHash('sha1').update(source.href).digest('hex');
       const key = `articles/wordpress/${hash.slice(0, 20)}.${ext}`;
