@@ -151,7 +151,8 @@ describe('newspapers', () => {
   test('titles and dates issues, interpolating unknown ones', () => {
     expect(newspaperTitle(1)).toBe('창간호');
     expect(newspaperTitle(23)).toBe('제23호');
-    expect(newspaperDate(24).toISOString()).toBe('2019-03-11T00:00:00.000Z');
-    expect(newspaperDate(2).toISOString()).toBe('2016-05-06T00:00:00.000Z');
+    expect(newspaperDate(24)?.toISOString()).toBe('2019-03-11T00:00:00.000Z');
+    expect(newspaperDate(73)).toBeNull();
+    expect(newspaperDate(2)?.toISOString()).toBe('2016-05-06T00:00:00.000Z');
   });
 });

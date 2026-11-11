@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
+import { setTimeout } from 'timers/promises';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -248,8 +249,10 @@ export function newspaperTitle(issue: number): string {
   return issue === 0 ? '창간준비호' : issue === 1 ? '창간호' : `제${issue}호`;
 }
 
-export function newspaperDate(issue: number): Date {
+// Returns null past the last known issue.
+export function newspaperDate(issue: number): Date | null {
   const next = NEWSPAPER_DATES.findIndex(([known]) => known >= issue);
+  if (next === -1) return null;
   const [toIssue, to] = NEWSPAPER_DATES[next];
   if (toIssue === issue || next === 0) return new Date(to);
   const [fromIssue, from] = NEWSPAPER_DATES[next - 1];
@@ -381,9 +384,16 @@ async function main() {
     const upload = (async () => {
       // Dead WordPress links are kept as is; an S3 failure aborts the run instead.
       // Redirects are refused so a download can't leave the allowlisted hosts.
-      const res = await fetch(source, { redirect: 'error' }).catch(
-        (error: Error) => error,
-      );
+      // Network errors, 429 and 5xx are retried so a flaky moment doesn't drop a file for good.
+      let res: Response | Error = new Error('not fetched');
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await setTimeout(1000 * 2 ** attempt);
+        res = await fetch(source, { redirect: 'error' }).catch(
+          (error: Error) => error,
+        );
+        if (!(res instanceof Error) && res.status !== 429 && res.status < 500)
+          break;
+      }
       const contentType =
         (!(res instanceof Error) && res.headers.get('content-type')) ||
         'application/octet-stream';
@@ -446,7 +456,7 @@ async function main() {
   // Explicit ids bypass the serial sequence; move it first so an interrupted run can't leave it behind.
   const maxPostId = Math.max(0, ...posts.map((post) => post.id));
   await db.execute(
-    sql`SELECT setval(pg_get_serial_sequence('article', 'id'), GREATEST((SELECT COALESCE(MAX(id), 1) FROM article), ${maxPostId}))`,
+    sql`SELECT setval(pg_get_serial_sequence('article', 'id'), GREATEST((SELECT COALESCE(MAX(id), 1) FROM article), ${maxPostId}, nextval(pg_get_serial_sequence('article', 'id'))))`,
   );
 
   // Members from an earlier run pick up the current roles too.
@@ -617,8 +627,11 @@ async function main() {
         // The API only accepts keys shaped like newspaper/<uuid>/<name>.pdf.
         const uuid = `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
         const fileKey = `newspaper/${uuid}/issue-${issue}.pdf`;
+        // Issues newer than the known dates fall back to the upload time.
+        const date =
+          newspaperDate(issue) ??
+          new Date(res.headers.get('last-modified') ?? Date.now());
         await putObject(fileKey, body, 'application/pdf');
-        const date = newspaperDate(issue);
         await db
           .insert(schema.newspaper)
           .values({
