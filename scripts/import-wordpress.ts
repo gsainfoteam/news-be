@@ -123,8 +123,7 @@ export function decodeEntities(text: string): string {
 }
 
 export function toCategories(slugs: string[]): Category[] | null {
-  if (slugs.length > 0 && slugs.every((slug) => SKIPPED_SLUGS.has(slug)))
-    return null;
+  if (slugs.some((slug) => SKIPPED_SLUGS.has(slug))) return null;
   return [...new Set(slugs.flatMap((slug) => CATEGORIES_BY_SLUG[slug] ?? []))];
 }
 
@@ -620,7 +619,10 @@ async function main() {
         const res = await fetch(NEWSPAPER_DIR + encodeURIComponent(file), {
           redirect: 'error',
         });
-        if (!res.ok || res.headers.get('content-type') !== 'application/pdf')
+        if (
+          !res.ok ||
+          !res.headers.get('content-type')?.startsWith('application/pdf')
+        )
           throw new Error(`GET ${file} failed: ${res.status}`);
         const body = new Uint8Array(await res.arrayBuffer());
         const hash = createHash('sha1').update(file).digest('hex');

@@ -71,7 +71,7 @@ describe('toCategories', () => {
 
   test('skips newspaper PDF posts', () => {
     expect(toCategories(['pdf'])).toBeNull();
-    expect(toCategories(['pdf', 'notice'])).toEqual([Category.NOTICE]);
+    expect(toCategories(['pdf', 'notice'])).toBeNull();
   });
 });
 
