@@ -1,6 +1,14 @@
 import { Category } from '@lib/drizzle';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ArticleSort } from 'src/article/enum/article-sort.enum';
 
@@ -44,6 +52,14 @@ export class SearchArticlesDto {
   @IsOptional()
   @IsEnum(Category)
   category?: Category;
+
+  @ApiPropertyOptional({
+    description: 'author (member) id',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  authorId?: string;
 
   @ApiPropertyOptional({
     description: 'sort order',

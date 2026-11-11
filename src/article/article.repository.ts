@@ -17,6 +17,7 @@ import {
   inArray,
   SQL,
   isNull,
+  exists,
 } from 'drizzle-orm';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateArticleDto } from './dto/req/create-article.dto';
@@ -222,6 +223,7 @@ export class ArticleRepository {
   private buildWhereClause({
     search,
     category,
+    authorId,
   }: SearchArticlesDto): SQL | undefined {
     const whereConditions: (SQL | undefined)[] = [isNull(article.deletedAt)];
     if (search) {
@@ -235,6 +237,21 @@ export class ArticleRepository {
     }
     if (category) {
       whereConditions.push(arrayContains(article.categories, [category]));
+    }
+    if (authorId) {
+      whereConditions.push(
+        exists(
+          this.drizzleService.db
+            .select()
+            .from(articleAuthor)
+            .where(
+              and(
+                eq(articleAuthor.articleId, article.id),
+                eq(articleAuthor.memberId, authorId),
+              ),
+            ),
+        ),
+      );
     }
     return and(...whereConditions);
   }
