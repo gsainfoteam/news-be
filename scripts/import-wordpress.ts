@@ -12,7 +12,7 @@ const WP_API = 'https://gistnews.co.kr/?rest_route=/wp/v2';
 const MIN_POST_ID = 212;
 const LEGACY_EMAIL_DOMAIN = 'legacy.gistnews.co.kr';
 const CONCURRENCY = 8;
-// The 신문사 소개 page lists the staff by section; everyone else is alumni.
+// The 신문사 소개 page lists the staff by section; unlisted authors are alumni.
 const STAFF_PAGE_ID = 5582;
 const ROLE_BY_SECTION: Record<string, Role> = {
   'editor/편집장': Role.EDITOR_IN_CHIEF,
@@ -23,8 +23,8 @@ const ROLE_BY_SECTION: Record<string, Role> = {
   'reporter/정기자': Role.REPORTING_REPORTER,
   'designer/디자이너': Role.DESIGNER,
   'digital/정기자': Role.DIGITAL_REPORTER,
-  'webmaster/웹마스터': Role.DIGITAL_REPORTER,
   'junior/수습기자': Role.CUB_REPORTER,
+  'left/거쳐간 사람들': Role.ALUMNI,
 };
 
 // WordPress category slug -> categories, parent first like the FE's CATEGORY_GROUPS.
@@ -104,23 +104,31 @@ export function toCategories(slugs: string[]): Category[] | null {
   return [...new Set(slugs.flatMap((slug) => CATEGORIES_BY_SLUG[slug] ?? []))];
 }
 
-// Maps staff display names to roles; sections run from senior to alumni, so the first listing wins.
-export function parseStaffRoles(html: string): Map<string, Role> {
-  const roles = new Map<string, Role>();
+type StaffMember = { key: string; name: string; role: Role; posts: number };
+
+// Gravatar hashes tell apart staff sharing a display name; sections run from senior to
+// alumni, so a person's first listing wins.
+export function parseStaff(html: string): StaffMember[] {
+  const staff = new Map<string, StaffMember>();
   let section = '';
   let title = '';
+  let avatar = '';
+  let name = '';
   const tokens =
-    /\bid="(\w+)"|td-pulldown-size">(.*?)<|td-authors-name"><a[^>]*>(.*?)<\/a>/g;
-  for (const [, id, heading, name] of html.matchAll(tokens)) {
+    /\bid="(\w+)"|td-pulldown-size">(.*?)<|(<img[^>]*\bavatar\b[^>]*>)|td-authors-name"><a[^>]*>(.*?)<\/a>|td-author-post-count">(\d+)/g;
+  for (const [, id, heading, img, author, posts] of html.matchAll(tokens)) {
     if (id) section = id;
     else if (heading) title = heading;
+    else if (img) avatar = /\/avatar\/([\da-f]{32})/.exec(img)?.[1] ?? '';
+    else if (author) name = decodeEntities(author);
     else {
       const role = ROLE_BY_SECTION[`${section}/${title}`];
-      const key = decodeEntities(name);
-      if (role && !roles.has(key)) roles.set(key, role);
+      const key = avatar || name;
+      if (role && !staff.has(key))
+        staff.set(key, { key, name, role, posts: Number(posts) });
     }
   }
-  return roles;
+  return [...staff.values()];
 }
 
 // WordPress stores Korean names as "given family" or "family given"; the 1-char part is the surname.
@@ -246,9 +254,16 @@ async function main() {
       `/pages/${STAFF_PAGE_ID}&_fields=content`,
     ),
   ]);
-  const staffRoles = parseStaffRoles(staffPage.data.content.rendered);
+  const staff = parseStaff(staffPage.data.content.rendered);
+  // The page shows 0 posts for some authors, so a name match counts unless a listing
+  // with posts already claims it (two staff can share a name).
+  const authorNames = new Set(users.map((u) => decodeEntities(u.name)));
+  const claimed = new Set(staff.filter((s) => s.posts > 0).map((s) => s.name));
+  const isAuthor = (s: StaffMember) =>
+    s.posts > 0 || (authorNames.has(s.name) && !claimed.has(s.name));
   const roleOf = (name: string) =>
-    staffRoles.get(decodeEntities(name)) ?? Role.ALUMNI;
+    staff.find((s) => isAuthor(s) && s.name === decodeEntities(name))?.role ??
+    Role.ALUMNI;
   const categorySlugById = new Map(categories.map((c) => [c.id, c.slug]));
   const userById = new Map(users.map((u) => [u.id, u]));
   const userBySlug = new Map(users.map((u) => [u.slug, u]));
@@ -262,7 +277,10 @@ async function main() {
 
   // Promises are cached so posts imported in parallel share one member.
   const memberIdByEmail = new Map<string, Promise<string>>();
-  function findOrCreateMember({ name, slug }: WpTerm): Promise<string> {
+  function findOrCreateMember(
+    { name, slug }: Pick<WpTerm, 'name' | 'slug'>,
+    role = roleOf(name),
+  ): Promise<string> {
     const email = `${slug}@${LEGACY_EMAIL_DOMAIN}`;
     const cached = memberIdByEmail.get(email);
     if (cached) return cached;
@@ -280,7 +298,7 @@ async function main() {
         .values({
           email,
           name: formatName(decodeEntities(name)),
-          role: roleOf(name),
+          role,
           permission: Permission.NONE,
         })
         .returning({ id: schema.member.id });
@@ -389,6 +407,14 @@ async function main() {
           isNull(schema.member.deletedAt),
         ),
       );
+  for (const { key, name, role } of staff.filter((s) => !isAuthor(s))) {
+    const hash = createHash('sha1').update(key).digest('hex').slice(0, 12);
+    const id = await findOrCreateMember({ name, slug: `staff-${hash}` }, role);
+    await db
+      .update(schema.member)
+      .set({ role })
+      .where(eq(schema.member.id, id));
+  }
 
   const existingIds = new Set(
     (

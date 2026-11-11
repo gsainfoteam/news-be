@@ -4,7 +4,7 @@ import {
   decodeEntities,
   formatName,
   fromGmt,
-  parseStaffRoles,
+  parseStaff,
   toCategories,
   toSourceUrl,
 } from './import-wordpress';
@@ -99,21 +99,25 @@ describe('cleanContent', () => {
   });
 });
 
-test('parseStaffRoles maps sections to roles, first listing wins', () => {
-  const block = (title: string, ...names: string[]) =>
-    `<span class="td-pulldown-size">${title}</span>` +
-    names
-      .map((name) => `<div class="td-authors-name"><a href="#">${name}</a>`)
-      .join('');
+test('parseStaff tells apart same names by avatar, first listing wins', () => {
+  const card = (name: string, avatar: string, posts: number) =>
+    `<img alt="" src="https://secure.gravatar.com/avatar/${avatar.repeat(32)}?s=70" class="avatar avatar-70">` +
+    `<div class="td-authors-name"><a href="#">${name}</a></div><span class="td-author-post-count">${posts} POSTS</span>`;
+  const block = (title: string, ...cards: string[]) =>
+    `<span class="td-pulldown-size">${title}</span>${cards.join('')}`;
   const html =
-    `<div id="editor">${block('편집장', '다연 이')}${block('부편집장', '지원 정')}</div>` +
-    `<div id="reporter">${block('정기자', '다연 이', '도윤 장')}</div>` +
-    `<div id="left">${block('거쳐간 사람들', '도윤 장', '희주 강')}</div>`;
-  expect(Object.fromEntries(parseStaffRoles(html))).toEqual({
-    '다연 이': Role.EDITOR_IN_CHIEF,
-    '지원 정': Role.DEPUTY_EDITOR_IN_CHIEF,
-    '도윤 장': Role.REPORTING_REPORTER,
-  });
+    `<div id="editor">${block('편집장', card('다연 이', 'a', 7))}</div>` +
+    `<div id="reporter">${block('정기자', card('다연 이', 'b', 0), card('지원 박', 'c', 0))}</div>` +
+    `<div id="webmaster">${block('웹마스터', card('도현 김', 'd', 0))}</div>` +
+    `<div id="left">${block('거쳐간 사람들', card('지원 박', 'c', 0), card('희주 강', 'e', 3))}</div>`;
+  expect(
+    parseStaff(html).map(({ name, role, posts }) => [name, role, posts]),
+  ).toEqual([
+    ['다연 이', Role.EDITOR_IN_CHIEF, 7],
+    ['다연 이', Role.REPORTING_REPORTER, 0],
+    ['지원 박', Role.REPORTING_REPORTER, 0],
+    ['희주 강', Role.ALUMNI, 3],
+  ]);
 });
 
 test('decodeEntities handles WordPress title entities', () => {
