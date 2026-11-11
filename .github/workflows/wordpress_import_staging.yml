@@ -8,6 +8,9 @@ concurrency:
   group: wordpress-import-staging
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   import:
     name: Import WordPress
@@ -21,15 +24,15 @@ jobs:
           persist-credentials: false
 
       - name: Install bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       - name: Install dependencies
         run: bun install
 
       - name: setup cloudflared
-        uses: AnimMouse/setup-cloudflared@v2
+        uses: AnimMouse/setup-cloudflared@b80ad7aa7850e1ec9960d75831f32ac9855df988 # v2
         with:
-          version: 'latest'
+          version: '2026.10.7'
 
       - name: use Cloudflare
         env:
