@@ -14,6 +14,8 @@ const MIN_POST_ID = 212;
 const LEGACY_EMAIL_DOMAIN = 'legacy.gistnews.co.kr';
 // Far from the old site and S3 (e.g. CI runners), more parallel requests hide the latency.
 const CONCURRENCY = Number(process.env.IMPORT_CONCURRENCY ?? 8);
+// A stalled request is aborted so its retry can run.
+const REQUEST_TIMEOUT_MS = 120_000;
 // The 신문사 소개 page lists the staff by section; unlisted authors are alumni.
 const STAFF_PAGE_ID = 5582;
 const ROLE_BY_SECTION: Record<string, Role> = {
@@ -374,6 +376,7 @@ async function main() {
         method: 'PUT',
         headers: { 'content-type': contentType },
         body,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       }).catch((error: Error) => error);
       if (!(put instanceof Error) && put.ok) return;
       const reason = put instanceof Error ? put.message : `${put.status}`;
@@ -382,24 +385,47 @@ async function main() {
       await setTimeout(1000 * 2 ** attempt);
     }
   }
+  // Caps file transfers across all posts, since one post can carry dozens of files.
+  let activeTransfers = 0;
+  const waitingTransfers: (() => void)[] = [];
+  async function withTransferSlot<T>(task: () => Promise<T>): Promise<T> {
+    while (activeTransfers >= CONCURRENCY)
+      await new Promise<void>((resolve) => waitingTransfers.push(resolve));
+    activeTransfers++;
+    try {
+      return await task();
+    } finally {
+      activeTransfers--;
+      waitingTransfers.shift()?.();
+    }
+  }
   const keyByUrl = new Map<string, Promise<string | null>>();
   const failedUrls: string[] = [];
   // Deterministic keys make a retried upload overwrite instead of duplicating.
   function uploadFile(source: URL): Promise<string | null> {
     const cached = keyByUrl.get(source.href);
     if (cached) return cached;
-    const upload = (async () => {
+    const upload = withTransferSlot(async () => {
       // Dead WordPress links are kept as is; an S3 failure aborts the run instead.
       // Redirects are refused so a download can't leave the allowlisted hosts.
       // Network errors, 429 and 5xx are retried so a flaky moment doesn't drop a file for good.
       let res: Response | Error = new Error('not fetched');
+      let body: Uint8Array | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         if (attempt > 0) await setTimeout(1000 * 2 ** attempt);
-        res = await fetch(source, { redirect: 'error' }).catch(
-          (error: Error) => error,
+        res = await fetch(source, {
+          redirect: 'error',
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        }).catch((error: Error) => error);
+        if (res instanceof Error || res.status === 429 || res.status >= 500)
+          continue;
+        if (!res.ok) break;
+        body = await res.arrayBuffer().then(
+          (buffer) => new Uint8Array(buffer),
+          () => null,
         );
-        if (!(res instanceof Error) && res.status !== 429 && res.status < 500)
-          break;
+        if (body) break;
+        res = new Error('body read failed');
       }
       const contentType =
         (!(res instanceof Error) && res.headers.get('content-type')) ||
@@ -407,6 +433,7 @@ async function main() {
       if (
         res instanceof Error ||
         !res.ok ||
+        !body ||
         contentType.startsWith('text/html')
       ) {
         failedUrls.push(
@@ -414,13 +441,12 @@ async function main() {
         );
         return null;
       }
-      const body = new Uint8Array(await res.arrayBuffer());
       const ext = source.pathname.split('.').pop()!.toLowerCase();
       const hash = createHash('sha1').update(source.href).digest('hex');
       const key = `articles/wordpress/${hash.slice(0, 20)}.${ext}`;
       await putObject(key, body, contentType);
       return key;
-    })();
+    });
     keyByUrl.set(source.href, upload);
     return upload;
   }
@@ -626,6 +652,7 @@ async function main() {
         const [issue, file] = entry;
         const res = await fetch(NEWSPAPER_DIR + encodeURIComponent(file), {
           redirect: 'error',
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
         if (
           !res.ok ||
