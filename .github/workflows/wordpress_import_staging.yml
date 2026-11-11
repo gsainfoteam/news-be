@@ -1,0 +1,50 @@
+name: Import WordPress (Dev)
+
+on:
+  workflow_dispatch:
+
+# The import is idempotent but not safe to run twice at once.
+concurrency:
+  group: wordpress-import-staging
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: Import WordPress
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: setup cloudflared
+        uses: AnimMouse/setup-cloudflared@v2
+        with:
+          version: 'latest'
+
+      - name: use Cloudflare
+        env:
+          TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          cloudflared access tcp --service-token-id ${{ secrets.CF_ACCESS_CLIENT_ID }} --service-token-secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }} --hostname icarus-db.gistory.me --url localhost:32345 &
+          sleep 5
+          nc -zv localhost 32345
+
+      - name: Import WordPress
+        run: bun run import:wordpress
+        env:
+          DATABASE_URL: ${{ secrets.STG_DATABASE_URL }}
+          AWS_REGION: ap-northeast-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.STG_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STG_AWS_SECRET_ACCESS_KEY }}
+          AWS_S3_BUCKET: ${{ secrets.STG_AWS_S3_BUCKET }}
