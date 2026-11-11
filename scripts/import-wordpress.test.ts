@@ -4,8 +4,11 @@ import {
   decodeEntities,
   formatName,
   fromGmt,
+  newspaperDate,
+  newspaperTitle,
   parseStaff,
   toCategories,
+  toNewspaperIssue,
   toSourceUrl,
 } from './import-wordpress';
 
@@ -131,4 +134,24 @@ test('fromGmt reads the value as UTC', () => {
   expect(fromGmt('2026-11-10T07:39:17').toISOString()).toBe(
     '2026-11-10T07:39:17.000Z',
   );
+});
+
+describe('newspapers', () => {
+  test('picks the outlined PDF of each issue', () => {
+    expect(toNewspaperIssue('지스트신문-제12호-아웃라인화.pdf')).toBe(12);
+    expect(toNewspaperIssue('지스트신문-41호-아웃라인화.pdf')).toBe(41);
+    expect(toNewspaperIssue('49호_아웃라인화.pdf')).toBe(49);
+    expect(toNewspaperIssue('지스트신문-창간호-아웃라인화.pdf')).toBe(1);
+    expect(toNewspaperIssue('창간준비호.pdf')).toBe(0);
+    expect(toNewspaperIssue('지스트신문-제12호.pdf')).toBeNull();
+    expect(toNewspaperIssue('지스트신문-제98호-아웃라인화.pdf')).toBeNull();
+    expect(toNewspaperIssue('64.pdf')).toBeNull();
+  });
+
+  test('titles and dates issues, interpolating unknown ones', () => {
+    expect(newspaperTitle(1)).toBe('창간호');
+    expect(newspaperTitle(23)).toBe('제23호');
+    expect(newspaperDate(24).toISOString()).toBe('2019-03-11T00:00:00.000Z');
+    expect(newspaperDate(2).toISOString()).toBe('2016-05-06T00:00:00.000Z');
+  });
 });

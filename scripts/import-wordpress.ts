@@ -61,6 +61,29 @@ const FILE_EXTENSIONS = new Set(
     ' ',
   ),
 );
+const NEWSPAPER_DIR = 'https://gistnews.co.kr/wordpress/PDFs/';
+// Publish dates from the history page and the newspaper posts (창간준비호 from its PDF);
+// issues in between are interpolated.
+const NEWSPAPER_DATES: [issue: number, date: string][] = [
+  [0, '2016-01-29'],
+  [1, '2016-04-11'],
+  [3, '2016-05-31'],
+  [11, '2017-06-30'],
+  [19, '2018-05-30'],
+  [24, '2019-03-11'],
+  [31, '2020-03-18'],
+  [38, '2021-03-10'],
+  [45, '2022-03-04'],
+  [50, '2022-12-02'],
+  [51, '2023-03-08'],
+  [56, '2024-04-08'],
+  [61, '2025-04-01'],
+  [68, '2026-03-12'],
+  [69, '2026-05-15'],
+  [70, '2026-07-24'],
+  [71, '2026-09-22'],
+  [72, '2026-11-10'],
+];
 const COMPOUND_SURNAMES = new Set(
   '남궁 제갈 선우 황보 독고 사공 서문 동방'.split(' '),
 );
@@ -211,6 +234,33 @@ export function cleanContent(html: string, articleIds: Set<number>): string {
     .replace(/(<p>(&nbsp;|\s)*<\/p>\s*){2,}/g, '<p>&nbsp;</p>\n');
 }
 
+// Picks the outlined PDF of each issue; 제98호 is a misnamed re-upload of 제68호.
+export function toNewspaperIssue(file: string): number | null {
+  if (file === '창간준비호.pdf') return 0;
+  if (file === '지스트신문-창간호-아웃라인화.pdf') return 1;
+  const issue = Number(
+    /^(?:지스트신문-)?제?(\d+)호[-_]아웃라인화\.pdf$/.exec(file)?.[1],
+  );
+  return issue > 1 && issue !== 98 ? issue : null;
+}
+
+export function newspaperTitle(issue: number): string {
+  return issue === 0 ? '창간준비호' : issue === 1 ? '창간호' : `제${issue}호`;
+}
+
+export function newspaperDate(issue: number): Date {
+  const next = NEWSPAPER_DATES.findIndex(([known]) => known >= issue);
+  const [toIssue, to] = NEWSPAPER_DATES[next];
+  if (toIssue === issue || next === 0) return new Date(to);
+  const [fromIssue, from] = NEWSPAPER_DATES[next - 1];
+  const start = Date.parse(from);
+  const ratio = (issue - fromIssue) / (toIssue - fromIssue);
+  const day = 86_400_000;
+  return new Date(
+    start + Math.round(((Date.parse(to) - start) * ratio) / day) * day,
+  );
+}
+
 // WordPress *_gmt fields are UTC without an offset.
 export function fromGmt(value: string): Date {
   return new Date(`${value}Z`);
@@ -309,6 +359,19 @@ async function main() {
   }
 
   const fileService = new FileService(new ConfigService());
+  async function putObject(key: string, body: Uint8Array, contentType: string) {
+    const uploadUrl = await fileService.createPresignedUrl(
+      key,
+      body.length,
+      contentType,
+    );
+    const put = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'content-type': contentType },
+      body,
+    });
+    if (!put.ok) throw new Error(`S3 PUT ${key} failed: ${put.status}`);
+  }
   const keyByUrl = new Map<string, Promise<string | null>>();
   const failedUrls: string[] = [];
   // Deterministic keys make a retried upload overwrite instead of duplicating.
@@ -338,17 +401,7 @@ async function main() {
       const ext = source.pathname.split('.').pop()!.toLowerCase();
       const hash = createHash('sha1').update(source.href).digest('hex');
       const key = `articles/wordpress/${hash.slice(0, 20)}.${ext}`;
-      const uploadUrl = await fileService.createPresignedUrl(
-        key,
-        body.length,
-        contentType,
-      );
-      const put = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'content-type': contentType },
-        body,
-      });
-      if (!put.ok) throw new Error(`S3 PUT ${key} failed: ${put.status}`);
+      await putObject(key, body, contentType);
       return key;
     })();
     keyByUrl.set(source.href, upload);
@@ -523,6 +576,61 @@ async function main() {
 
   console.log(
     `fetched ${posts.length}, imported ${imported}, skipped ${skipped}, already existing ids ${conflicts}`,
+  );
+
+  // Newspaper PDFs live outside WordPress media, so they are read from the directory listing.
+  const listing = await fetch(NEWSPAPER_DIR).then((res) => res.text());
+  const fileByIssue = new Map<number, string>();
+  for (const [, href] of listing.matchAll(/href="([^"?/][^"]*\.pdf)"/g)) {
+    const file = decodeURIComponent(href);
+    const issue = toNewspaperIssue(file);
+    if (issue !== null) fileByIssue.set(issue, file);
+  }
+  const existingTitles = new Set(
+    (
+      await db.select({ title: schema.newspaper.title }).from(schema.newspaper)
+    ).map((row) => row.title),
+  );
+  const newspaperQueue = [...fileByIssue].filter(
+    ([issue]) => !existingTitles.has(newspaperTitle(issue)),
+  );
+  let newspapers = 0;
+  // PDFs reach ~50MB, so fewer run at once than articles.
+  await Promise.all(
+    Array.from({ length: 3 }, async () => {
+      for (
+        let entry = newspaperQueue.shift();
+        entry;
+        entry = newspaperQueue.shift()
+      ) {
+        const [issue, file] = entry;
+        const res = await fetch(NEWSPAPER_DIR + encodeURIComponent(file), {
+          redirect: 'error',
+        });
+        if (!res.ok || res.headers.get('content-type') !== 'application/pdf')
+          throw new Error(`GET ${file} failed: ${res.status}`);
+        const body = new Uint8Array(await res.arrayBuffer());
+        const hash = createHash('sha1').update(file).digest('hex');
+        // The API only accepts keys shaped like newspaper/<uuid>/<name>.pdf.
+        const uuid = `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+        const fileKey = `newspaper/${uuid}/issue-${issue}.pdf`;
+        await putObject(fileKey, body, 'application/pdf');
+        const date = newspaperDate(issue);
+        await db
+          .insert(schema.newspaper)
+          .values({
+            title: newspaperTitle(issue),
+            fileKey,
+            createdAt: date,
+            updatedAt: date,
+          })
+          .onConflictDoNothing();
+        newspapers++;
+      }
+    }),
+  );
+  console.log(
+    `newspapers: ${fileByIssue.size} found, ${newspapers} imported, ${existingTitles.size} already existing`,
   );
   await client.end();
 }
