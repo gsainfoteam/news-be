@@ -579,7 +579,10 @@ async function main() {
   );
 
   // Newspaper PDFs live outside WordPress media, so they are read from the directory listing.
-  const listing = await fetch(NEWSPAPER_DIR).then((res) => res.text());
+  const listingRes = await fetch(NEWSPAPER_DIR);
+  if (!listingRes.ok)
+    throw new Error(`GET ${NEWSPAPER_DIR} failed: ${listingRes.status}`);
+  const listing = await listingRes.text();
   const fileByIssue = new Map<number, string>();
   for (const [, href] of listing.matchAll(/href="([^"?/][^"]*\.pdf)"/g)) {
     const file = decodeURIComponent(href);
