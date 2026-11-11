@@ -260,7 +260,7 @@ async function main() {
   const authorNames = new Set(users.map((u) => decodeEntities(u.name)));
   const claimed = new Set(staff.filter((s) => s.posts > 0).map((s) => s.name));
   const isAuthor = (s: StaffMember) =>
-    s.posts > 0 || (authorNames.has(s.name) && !claimed.has(s.name));
+    authorNames.has(s.name) && (s.posts > 0 || !claimed.has(s.name));
   const roleOf = (name: string) =>
     staff.find((s) => isAuthor(s) && s.name === decodeEntities(name))?.role ??
     Role.ALUMNI;
@@ -407,13 +407,19 @@ async function main() {
           isNull(schema.member.deletedAt),
         ),
       );
-  for (const { key, name, role } of staff.filter((s) => !isAuthor(s))) {
-    const hash = createHash('sha1').update(key).digest('hex').slice(0, 12);
-    const id = await findOrCreateMember({ name, slug: `staff-${hash}` }, role);
-    await db
-      .update(schema.member)
-      .set({ role })
-      .where(eq(schema.member.id, id));
+  // Every listed staff gets a member, even without an imported article.
+  for (const s of staff) {
+    const hash = createHash('sha1').update(s.key).digest('hex').slice(0, 12);
+    const terms = isAuthor(s)
+      ? users.filter((u) => decodeEntities(u.name) === s.name)
+      : [{ name: s.name, slug: `staff-${hash}` }];
+    for (const term of terms) {
+      const id = await findOrCreateMember(term, s.role);
+      await db
+        .update(schema.member)
+        .set({ role: s.role })
+        .where(eq(schema.member.id, id));
+    }
   }
 
   const existingIds = new Set(
