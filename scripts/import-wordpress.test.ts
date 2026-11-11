@@ -1,9 +1,10 @@
-import { Category } from '../libs/drizzle/src/enum';
+import { Category, Role } from '../libs/drizzle/src/enum';
 import {
   cleanContent,
   decodeEntities,
   formatName,
   fromGmt,
+  parseStaffRoles,
   toCategories,
   toSourceUrl,
 } from './import-wordpress';
@@ -95,6 +96,23 @@ describe('cleanContent', () => {
         new Set(),
       ),
     ).toBe('<p>a</p><p>&nbsp;</p>\n<img src="x.jpg"><p>&nbsp;</p>');
+  });
+});
+
+test('parseStaffRoles maps sections to roles, first listing wins', () => {
+  const block = (title: string, ...names: string[]) =>
+    `<span class="td-pulldown-size">${title}</span>` +
+    names
+      .map((name) => `<div class="td-authors-name"><a href="#">${name}</a>`)
+      .join('');
+  const html =
+    `<div id="editor">${block('편집장', '다연 이')}${block('부편집장', '지원 정')}</div>` +
+    `<div id="reporter">${block('정기자', '다연 이', '도윤 장')}</div>` +
+    `<div id="left">${block('거쳐간 사람들', '도윤 장', '희주 강')}</div>`;
+  expect(Object.fromEntries(parseStaffRoles(html))).toEqual({
+    '다연 이': Role.EDITOR_IN_CHIEF,
+    '지원 정': Role.DEPUTY_EDITOR_IN_CHIEF,
+    '도윤 장': Role.REPORTING_REPORTER,
   });
 });
 

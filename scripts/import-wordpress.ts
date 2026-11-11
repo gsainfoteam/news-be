@@ -12,6 +12,20 @@ const WP_API = 'https://gistnews.co.kr/?rest_route=/wp/v2';
 const MIN_POST_ID = 212;
 const LEGACY_EMAIL_DOMAIN = 'legacy.gistnews.co.kr';
 const CONCURRENCY = 8;
+// The 신문사 소개 page lists the staff by section; everyone else is alumni.
+const STAFF_PAGE_ID = 5582;
+const ROLE_BY_SECTION: Record<string, Role> = {
+  'editor/편집장': Role.EDITOR_IN_CHIEF,
+  'editor/부편집장': Role.DEPUTY_EDITOR_IN_CHIEF,
+  'seniorReporter/책임기자': Role.REPORTING_SENIOR_REPORTER,
+  'seniorDesigner/책임디자이너': Role.SENIOR_DESIGNER,
+  'seniorDigital/책임기자': Role.DIGITAL_SENIOR_REPORTER,
+  'reporter/정기자': Role.REPORTING_REPORTER,
+  'designer/디자이너': Role.DESIGNER,
+  'digital/정기자': Role.DIGITAL_REPORTER,
+  'webmaster/웹마스터': Role.DIGITAL_REPORTER,
+  'junior/수습기자': Role.CUB_REPORTER,
+};
 
 // WordPress category slug -> categories, parent first like the FE's CATEGORY_GROUPS.
 const CATEGORIES_BY_SLUG: Record<string, Category[]> = {
@@ -88,6 +102,25 @@ export function toCategories(slugs: string[]): Category[] | null {
   if (slugs.length > 0 && slugs.every((slug) => SKIPPED_SLUGS.has(slug)))
     return null;
   return [...new Set(slugs.flatMap((slug) => CATEGORIES_BY_SLUG[slug] ?? []))];
+}
+
+// Maps staff display names to roles; sections run from senior to alumni, so the first listing wins.
+export function parseStaffRoles(html: string): Map<string, Role> {
+  const roles = new Map<string, Role>();
+  let section = '';
+  let title = '';
+  const tokens =
+    /\bid="(\w+)"|td-pulldown-size">(.*?)<|td-authors-name"><a[^>]*>(.*?)<\/a>/g;
+  for (const [, id, heading, name] of html.matchAll(tokens)) {
+    if (id) section = id;
+    else if (heading) title = heading;
+    else {
+      const role = ROLE_BY_SECTION[`${section}/${title}`];
+      const key = decodeEntities(name);
+      if (role && !roles.has(key)) roles.set(key, role);
+    }
+  }
+  return roles;
 }
 
 // WordPress stores Korean names as "given family" or "family given"; the 1-char part is the surname.
@@ -202,14 +235,20 @@ async function main() {
   const client = postgres(databaseUrl);
   const db = drizzle(client, { schema });
 
-  const [categories, coauthors, users, posts] = await Promise.all([
+  const [categories, coauthors, users, posts, staffPage] = await Promise.all([
     fetchAll<WpTerm>('/categories&_fields=id,name,slug'),
     fetchAll<WpTerm>('/coauthors&_fields=id,name,slug'),
     fetchAll<WpTerm>('/users&_fields=id,name,slug'),
     fetchAll<WpPost>(
       '/posts&orderby=id&order=asc&_fields=id,date_gmt,modified_gmt,title,content,author,categories,coauthors,jetpack_featured_media_url',
     ),
+    fetchJson<{ content: { rendered: string } }>(
+      `/pages/${STAFF_PAGE_ID}&_fields=content`,
+    ),
   ]);
+  const staffRoles = parseStaffRoles(staffPage.data.content.rendered);
+  const roleOf = (name: string) =>
+    staffRoles.get(decodeEntities(name)) ?? Role.ALUMNI;
   const categorySlugById = new Map(categories.map((c) => [c.id, c.slug]));
   const userById = new Map(users.map((u) => [u.id, u]));
   const userBySlug = new Map(users.map((u) => [u.slug, u]));
@@ -241,7 +280,7 @@ async function main() {
         .values({
           email,
           name: formatName(decodeEntities(name)),
-          role: Role.ALUMNI,
+          role: roleOf(name),
           permission: Permission.NONE,
         })
         .returning({ id: schema.member.id });
@@ -338,6 +377,18 @@ async function main() {
   await db.execute(
     sql`SELECT setval(pg_get_serial_sequence('article', 'id'), GREATEST((SELECT COALESCE(MAX(id), 1) FROM article), ${maxPostId}))`,
   );
+
+  // Members from an earlier run pick up the current roles too.
+  for (const user of users)
+    await db
+      .update(schema.member)
+      .set({ role: roleOf(user.name) })
+      .where(
+        and(
+          eq(schema.member.email, `${user.slug}@${LEGACY_EMAIL_DOMAIN}`),
+          isNull(schema.member.deletedAt),
+        ),
+      );
 
   const existingIds = new Set(
     (
