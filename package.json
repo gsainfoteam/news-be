@@ -21,6 +21,7 @@
     "db:gen": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
+    "import:wordpress": "bun scripts/import-wordpress.ts",
     "email": "email dev --dir libs/templates/src/templates",
     "email:export": "bun libs/templates/src/export.tsx > libs/templates/template.html"
   },
