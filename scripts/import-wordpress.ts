@@ -12,7 +12,8 @@ const WP_API = 'https://gistnews.co.kr/?rest_route=/wp/v2';
 // Posts below this id are WordPress setup leftovers, not articles.
 const MIN_POST_ID = 212;
 const LEGACY_EMAIL_DOMAIN = 'legacy.gistnews.co.kr';
-const CONCURRENCY = 8;
+// Far from the old site and S3 (e.g. CI runners), more parallel requests hide the latency.
+const CONCURRENCY = Number(process.env.IMPORT_CONCURRENCY ?? 8);
 // The 신문사 소개 page lists the staff by section; unlisted authors are alumni.
 const STAFF_PAGE_ID = 5582;
 const ROLE_BY_SECTION: Record<string, Role> = {
@@ -361,18 +362,25 @@ async function main() {
   }
 
   const fileService = new FileService(new ConfigService());
+  // Dropped connections and 5xx are retried with a fresh URL; anything else aborts the run.
   async function putObject(key: string, body: Uint8Array, contentType: string) {
-    const uploadUrl = await fileService.createPresignedUrl(
-      key,
-      body.length,
-      contentType,
-    );
-    const put = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: { 'content-type': contentType },
-      body,
-    });
-    if (!put.ok) throw new Error(`S3 PUT ${key} failed: ${put.status}`);
+    for (let attempt = 0; ; attempt++) {
+      const uploadUrl = await fileService.createPresignedUrl(
+        key,
+        body.length,
+        contentType,
+      );
+      const put = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'content-type': contentType },
+        body,
+      }).catch((error: Error) => error);
+      if (!(put instanceof Error) && put.ok) return;
+      const reason = put instanceof Error ? put.message : `${put.status}`;
+      if (attempt >= 3 || (!(put instanceof Error) && put.status < 500))
+        throw new Error(`S3 PUT ${key} failed: ${reason}`);
+      await setTimeout(1000 * 2 ** attempt);
+    }
   }
   const keyByUrl = new Map<string, Promise<string | null>>();
   const failedUrls: string[] = [];

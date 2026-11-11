@@ -15,7 +15,7 @@ jobs:
   import:
     name: Import WordPress
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
 
     steps:
       - name: Checkout Repository
@@ -46,6 +46,7 @@ jobs:
       - name: Import WordPress
         run: bun run import:wordpress
         env:
+          IMPORT_CONCURRENCY: 24
           DATABASE_URL: ${{ secrets.STG_DATABASE_URL }}
           AWS_REGION: ap-northeast-2
           AWS_ACCESS_KEY_ID: ${{ secrets.STG_AWS_ACCESS_KEY_ID }}
