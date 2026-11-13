@@ -21,17 +21,9 @@ import type { Request, Response } from 'express';
 import { JwtTokenDto } from './dto/res/token.dto';
 import { LoginDto } from './dto/req/login.dto';
 import { UserService } from 'src/user/user.service';
-import { JwtTokenType } from './types/jwt-token.type';
 
 @Controller('auth')
 export class AuthController {
-  private readonly cookieOptions = {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/auth',
-  } as const;
-
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
@@ -57,14 +49,22 @@ export class AuthController {
     // news has no app, so the refresh token only travels in the cookie
     if (body.transport === 'body')
       throw new BadRequestException('transport body is not supported');
-    const tokens =
+    const { accessToken, refreshToken, expiresAt } =
       body.ticket === undefined
         ? await this.authService.login(body)
         : await this.userService.registerUser({
             tempToken: body.ticket,
             nickname: body.nickname,
           });
-    return this.sendTokens(res, tokens);
+
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      expires: expiresAt,
+      path: '/auth',
+    });
+    return { access_token: accessToken! };
   }
 
   @ApiOperation({
@@ -83,7 +83,20 @@ export class AuthController {
     const refreshToken = req.cookies['refresh_token'] as string;
     if (!refreshToken) throw new UnauthorizedException();
 
-    return this.sendTokens(res, await this.authService.refresh(refreshToken));
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      expiresAt,
+    } = await this.authService.refresh(refreshToken);
+
+    res.cookie('refresh_token', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      expires: expiresAt,
+      path: '/auth',
+    });
+    return { access_token: accessToken! };
   }
 
   @ApiOperation({
@@ -98,18 +111,12 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const refreshToken = req.cookies['refresh_token'] as string;
-    res.clearCookie('refresh_token', this.cookieOptions);
-    if (refreshToken) await this.authService.logout(refreshToken);
-  }
-
-  private sendTokens(
-    res: Response,
-    { accessToken, refreshToken, expiresAt }: JwtTokenType,
-  ): JwtTokenDto {
-    res.cookie('refresh_token', refreshToken, {
-      ...this.cookieOptions,
-      expires: expiresAt,
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/auth',
     });
-    return { access_token: accessToken! };
+    if (refreshToken) await this.authService.logout(refreshToken);
   }
 }
