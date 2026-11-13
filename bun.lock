@@ -7,7 +7,7 @@
       "dependencies": {
         "@aws-sdk/client-s3": "^3.1079.0",
         "@aws-sdk/s3-request-presigner": "^3.1079.0",
-        "@infoteam/account-nest": "^0.6.1",
+        "@infoteam/account-nest": "^0.7.0",
         "@nestjs/axios": "^4.0.1",
         "@nestjs/common": "^11.0.1",
         "@nestjs/config": "^4.0.4",
@@ -34,7 +34,7 @@
       "devDependencies": {
         "@eslint/eslintrc": "^3.2.0",
         "@eslint/js": "^9.18.0",
-        "@infoteam/account-testing": "^0.6.1",
+        "@infoteam/account-testing": "^0.7.0",
         "@nestjs/cli": "^11.0.0",
         "@nestjs/schematics": "^11.0.0",
         "@nestjs/testing": "^11.0.1",
@@ -337,13 +337,13 @@
 
     "@infoteam/account-contract": ["@infoteam/account-contract@0.3.0", "", {}, "sha512-PEg/QcQKL7ILw5I21wQkBYAxoRTo0AbVst76YiiZasZN6WydVWrwx+yiTjLcLzSm/+MJI9jvyy7DOpLesBGn2g=="],
 
-    "@infoteam/account-core": ["@infoteam/account-core@0.6.1", "", { "dependencies": { "@infoteam/account-contract": "^0.3.0", "es-toolkit": "^1.52.0", "jose": "^6.2.12", "oauth4webapi": "^3.8.8" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-cJ3ZX2Qb7j8XogPlYEWQrPko7ClXK5JcBV90f8v7QNAl+Au7+wsHXXKT+SQxByaq53MKxbvtk7H9SF6ii7sJlQ=="],
+    "@infoteam/account-core": ["@infoteam/account-core@0.7.0", "", { "dependencies": { "@infoteam/account-contract": "^0.3.0", "es-toolkit": "^1.52.0", "jose": "^6.2.12", "oauth4webapi": "^3.8.8" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-H78EWSjgpA4I6gld/9MDWguQgPsT0/StpuyBGv2SMDlKnhGrEiD5hmOzNOZsoRmaleKxh7AUJVPdO/FUyaqr3g=="],
 
-    "@infoteam/account-nest": ["@infoteam/account-nest@0.6.1", "", { "dependencies": { "@infoteam/account-core": "^0.6.1", "@infoteam/account-server": "^0.6.1" }, "peerDependencies": { "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0", "zod": "^4.0.0" } }, "sha512-De/1KDzRVzg4fS+wTyxPOZFJQKappOxg5VF2016T2btj4a2Ts3o77K4ixumR5aTsGPaOscscdeOo7ItoFca/xA=="],
+    "@infoteam/account-nest": ["@infoteam/account-nest@0.7.0", "", { "dependencies": { "@infoteam/account-core": "^0.7.0", "@infoteam/account-server": "^0.7.0" }, "peerDependencies": { "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0", "@nestjs/swagger": "^7.0.0 || ^8.0.0 || ^11.0.0", "class-validator": "^0.14.0 || ^0.15.0", "zod": "^4.0.0" }, "optionalPeers": ["@nestjs/swagger", "class-validator"] }, "sha512-bo7hz2EKgZ6gATYWLO9L2JCkeTDRdyEJi62dkUNrRwFPY0iNT0Qz43AU0mvBfNl4VD3D4GqUuPI6RsnGdeZXrg=="],
 
-    "@infoteam/account-server": ["@infoteam/account-server@0.6.1", "", { "dependencies": { "@infoteam/account-core": "^0.6.1", "es-toolkit": "^1.52.0" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-zmAD7Wp0VPp/DXgfjRxpSv+VZEh6324iC+kvBvO5xUTjYZnzSQKnSivRAsMOb2P/WAeMSXuzwWSBKf1KbAXlkw=="],
+    "@infoteam/account-server": ["@infoteam/account-server@0.7.0", "", { "dependencies": { "@infoteam/account-core": "^0.7.0", "es-toolkit": "^1.52.0" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-z7qXwAmrA2WstU/Gf4tFC/xhU90nY1fyaNXPKjV5f4IaitdWnFr6rCSurju4J2R6lbI53OKn/260vcxvF8qLiQ=="],
 
-    "@infoteam/account-testing": ["@infoteam/account-testing@0.6.1", "", { "dependencies": { "@faker-js/faker": "^9.9.0", "@infoteam/account-contract": "^0.3.0", "jose": "^6.2.12", "oauth4webapi": "^3.8.8" } }, "sha512-XlvgKeUXq+y5c5kkWKyWSzWUeRveBaUbPGB9XYuDAN3euxXjtt7shyfpfYLQPlVbdiWxY4xx48UTO2WgSK03+g=="],
+    "@infoteam/account-testing": ["@infoteam/account-testing@0.7.0", "", { "dependencies": { "@faker-js/faker": "^9.9.0", "@infoteam/account-contract": "^0.3.0", "jose": "^6.2.12", "oauth4webapi": "^3.8.8" } }, "sha512-TciHzbaOXXid2mY6fR+iEA/GjQ2n0mDyTyAk1QbgmSe5BwEy+Wnb0ITcFNGRZQmacBCaTp6T2yVelsPLKuilwQ=="],
 
     "@inquirer/ansi": ["@inquirer/ansi@1.0.2", "", {}, "sha512-S8qNSZiYzFd0wAcyG5AXCvUHC5Sr7xpZ9wZ2py9XR88jUz8wooStVx5M6dRzczbBWjic9NP7+rY0Xi7qqK/aMQ=="],
 

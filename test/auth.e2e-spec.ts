@@ -209,11 +209,15 @@ describe('Auth API with the account SDK', () => {
       .expect(401);
   });
 
-  it('rejects a forged ticket and a code the IdP did not issue', async () => {
+  it('rejects a malformed or forged ticket, a code the IdP did not issue, and transport body', async () => {
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ ticket: null })
+      .expect(400);
     await request(app.getHttpServer())
       .post('/auth/login')
       .send({ ticket: 'not-a-jwt' })
-      .expect(400);
+      .expect(401);
     await request(app.getHttpServer())
       .post('/auth/login')
       .send({ ticket: 'a.b.c' })
@@ -227,5 +231,10 @@ describe('Auth API with the account SDK', () => {
         nonce: 'n',
       })
       .expect(401);
+    const { body } = await idp.authorize({ clientId, user: fakeUser() });
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ ...body, transport: 'body' })
+      .expect(400);
   });
 });
