@@ -1,15 +1,17 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
+  HttpCode,
   Post,
   Req,
   Res,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import {
-  ApiBearerAuth,
+  ApiBadGatewayResponse,
+  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
-  ApiOAuth2,
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
@@ -17,36 +19,43 @@ import {
 import { AuthService } from './auth.service';
 import type { Request, Response } from 'express';
 import { JwtTokenDto } from './dto/res/token.dto';
-import { JwtGuard } from './guard/jwt.guard';
+import { LoginDto } from './dto/req/login.dto';
+import { UserService } from 'src/user/user.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @ApiOperation({
     summary: 'User Login',
     description:
-      'Issue JWT token. User must provide a valid Infoteam Account OpenID Token in the Authorization header.\n' +
-      'If a `tempToken` is returned, it indicates that the user is not yet registered and must complete the registration process using the provided token.',
+      'Exchange the Infoteam Account authorization code and issue a JWT token.\n' +
+      'A user who has not agreed to the terms gets 403 `session_rejected` with a `ticket`, and logs in again with `{ ticket, nickname }` to sign up.',
   })
   @ApiOkResponse({ type: JwtTokenDto, description: 'Login success' })
-  @ApiUnauthorizedResponse({
-    description: 'Invalid Infoteam Account OpenID Token',
-  })
+  @ApiUnauthorizedResponse({ description: 'Invalid code or ticket' })
+  @ApiForbiddenResponse({ description: 'Consent required' })
+  @ApiBadGatewayResponse({ description: 'IdP unavailable' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
-  @ApiOAuth2(['name', 'email', 'picture'], 'oauth2')
   @Post('login')
+  @HttpCode(200)
   async login(
-    @Req() req: Request,
+    @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<JwtTokenDto> {
-    const auth = req.headers['authorization'];
-    if (!auth) throw new UnauthorizedException();
-
-    const { accessToken, refreshToken, tempToken, expiresAt } =
-      await this.authService.login(auth);
-
-    if (tempToken) return { tempToken };
+    // news has no app, so the refresh token only travels in the cookie
+    if (body.transport === 'body')
+      throw new BadRequestException('transport body is not supported');
+    const { accessToken, refreshToken, expiresAt } =
+      body.ticket === undefined
+        ? await this.authService.login(body)
+        : await this.userService.registerUser({
+            tempToken: body.ticket,
+            nickname: body.nickname,
+          });
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
@@ -55,7 +64,7 @@ export class AuthController {
       expires: expiresAt,
       path: '/auth',
     });
-    return { accessToken };
+    return { access_token: accessToken! };
   }
 
   @ApiOperation({
@@ -66,6 +75,7 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @Post('refresh')
+  @HttpCode(200)
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -86,7 +96,7 @@ export class AuthController {
       expires: expiresAt,
       path: '/auth',
     });
-    return { accessToken };
+    return { access_token: accessToken! };
   }
 
   @ApiOperation({
@@ -94,20 +104,19 @@ export class AuthController {
     description: 'Logout the user from the cookie. Delete the refresh token.',
   })
   @ApiOkResponse({ description: 'Logout' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
-  @ApiBearerAuth('jwt')
-  @UseGuards(JwtGuard)
   @Post('logout')
   async logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const refreshToken = req.cookies['refresh_token'] as string;
-    if (!refreshToken) return;
-    await this.authService.logout(refreshToken);
     res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
       path: '/auth',
     });
+    if (refreshToken) await this.authService.logout(refreshToken);
   }
 }

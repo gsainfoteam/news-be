@@ -1,5 +1,12 @@
-import { InfoteamAccountService } from '@lib/infoteam-account';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { toHttpException } from '@infoteam/account-nest';
+import { AccountService } from './account';
+import { LoginDto } from './dto/req/login.dto';
 import { JwtTokenType } from './types/jwt-token.type';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
@@ -16,7 +23,7 @@ export class AuthService {
   private readonly jwtTempSecret: string;
 
   constructor(
-    private readonly infoteamAccountService: InfoteamAccountService,
+    private readonly accountService: AccountService,
     private readonly authRepository: AuthRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -31,32 +38,44 @@ export class AuthService {
       this.configService.getOrThrow<string>('JWT_TEMP_SECRET');
   }
 
-  async login(auth: string): Promise<JwtTokenType> {
-    const token = auth.split(' ')[1];
-    if (!token) throw new UnauthorizedException();
-    const userinfo = await this.infoteamAccountService.getUserInfo(token);
-    await this.authRepository.deleteExpiredRefreshTokens(userinfo.uuid);
+  async login(body: LoginDto): Promise<JwtTokenType> {
+    const { user: idpUser } = await this.accountService
+      .loginWithCode({
+        code: body.code,
+        codeVerifier: body.code_verifier,
+        redirectUri: body.redirect_uri,
+        nonce: body.nonce,
+        iss: body.iss,
+      })
+      .catch(toHttpException);
+    await this.authRepository.deleteExpiredRefreshTokens(idpUser.sub);
 
-    const user = await this.authRepository.upsertUser(userinfo);
+    const user = await this.authRepository.upsertUser(idpUser);
     if (user.termsAgreedAt === null || user.privacyAgreedAt === null)
-      return {
-        tempToken: this.jwtService.sign(
+      throw new ForbiddenException({
+        error: 'session_rejected',
+        ticket: this.jwtService.sign(
           {},
           {
-            subject: userinfo.uuid,
+            subject: user.id,
             secret: this.jwtTempSecret,
             expiresIn: '5m',
           },
         ),
-      };
+        details: { reason: 'consent_required' },
+      });
 
-    return await this.issueTokens(userinfo.uuid);
+    return await this.issueTokens(user.id);
   }
 
   async refresh(refreshToken: string): Promise<JwtTokenType> {
     const hashedToken = this.hashToken(refreshToken);
-    const tokenRecord =
-      await this.authRepository.deleteRefreshToken(hashedToken);
+    const tokenRecord = await this.authRepository
+      .deleteRefreshToken(hashedToken)
+      .catch((error: unknown) => {
+        if (error instanceof NotFoundException) return null;
+        throw error;
+      });
     if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
       throw new UnauthorizedException();
     }
@@ -66,7 +85,11 @@ export class AuthService {
 
   async logout(refreshToken: string): Promise<void> {
     const hashedToken = this.hashToken(refreshToken);
-    await this.authRepository.deleteRefreshToken(hashedToken);
+    await this.authRepository
+      .deleteRefreshToken(hashedToken)
+      .catch((error: unknown) => {
+        if (!(error instanceof NotFoundException)) throw error;
+      });
   }
 
   async issueTokens(

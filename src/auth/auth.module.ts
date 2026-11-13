@@ -1,7 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { InfoteamAccountModule } from '@lib/infoteam-account';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import ms, { StringValue } from 'ms';
@@ -10,11 +9,20 @@ import { DrizzleModule } from '@lib/drizzle';
 import { UserModule } from 'src/user/user.module';
 import { JwtGuard } from './guard/jwt.guard';
 import { JwtStrategy } from './guard/jwt.strategy';
+import { AccountModule } from './account';
 
 @Global()
 @Module({
   imports: [
-    InfoteamAccountModule,
+    AccountModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        issuer: configService.getOrThrow<string>('IDP_ISSUER'),
+        clientId: configService.getOrThrow<string>('CLIENT_ID'),
+        clientSecret: configService.getOrThrow<string>('CLIENT_SECRET'),
+      }),
+    }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
