@@ -26,7 +26,6 @@ export class UserRepository {
         privacyAgreedAt: new Date(),
         updatedAt: new Date(),
       })
-      // a temp token signs up only once
       .where(
         and(
           eq(user.id, id),

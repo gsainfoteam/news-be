@@ -4,7 +4,6 @@ import { Loggable } from '@lib/logger';
 import { UserEntity } from '@lib/drizzle';
 import { UserDto } from './dto/res/user.dto';
 import { MemberService } from 'src/member/member.service';
-import { RegisterUserDto } from './dto/req/register-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from 'jsonwebtoken';
@@ -29,10 +28,10 @@ export class UserService {
       this.configService.getOrThrow<string>('JWT_TEMP_SECRET');
   }
 
-  async registerUser({
-    tempToken,
-    nickname,
-  }: RegisterUserDto): Promise<JwtTokenType> {
+  async registerUser(
+    tempToken: string,
+    nickname?: string,
+  ): Promise<JwtTokenType> {
     const payload: JwtPayload = await this.jwtService
       .verifyAsync<JwtPayload>(tempToken, {
         secret: this.jwtTempSecret,

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment -- expect.any() is typed any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   INestApplication,
   NotFoundException,
@@ -192,7 +192,6 @@ describe('Auth API with the account SDK', () => {
       .expect(200);
     expect(refreshed.body).toEqual({ access_token: expect.any(String) });
 
-    // the old refresh token is rotated away
     await request(app.getHttpServer())
       .post('/auth/refresh')
       .set('Cookie', refreshCookie(res))

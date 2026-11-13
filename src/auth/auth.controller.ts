@@ -46,16 +46,12 @@ export class AuthController {
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<JwtTokenDto> {
-    // news has no app, so the refresh token only travels in the cookie
     if (body.transport === 'body')
       throw new BadRequestException('transport body is not supported');
     const { accessToken, refreshToken, expiresAt } =
       body.ticket === undefined
         ? await this.authService.login(body)
-        : await this.userService.registerUser({
-            tempToken: body.ticket,
-            nickname: body.nickname,
-          });
+        : await this.userService.registerUser(body.ticket, body.nickname);
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
