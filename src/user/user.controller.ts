@@ -56,7 +56,7 @@ export class UserController {
       expires: expiresAt,
       path: '/auth',
     });
-    return { accessToken };
+    return { access_token: accessToken! };
   }
 
   @ApiOperation({

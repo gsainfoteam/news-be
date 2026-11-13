@@ -1,7 +1,7 @@
 import { DrizzleService, existOrThrow, UserEntity } from '@lib/drizzle';
 import { Loggable } from '@lib/logger';
 import { Injectable, Logger } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, or } from 'drizzle-orm';
 import { user } from 'drizzle/schema';
 import { UpdateConsentDto } from './dto/req/update-consent.dto';
 
@@ -15,7 +15,7 @@ export class UserRepository {
   /*
   UPDATE "user"
   SET nickname = nickname, terms_agreed_at = NOW(), privacy_agreed_at = NOW()
-  WHERE id = id;
+  WHERE id = id AND (terms_agreed_at IS NULL OR privacy_agreed_at IS NULL);
   */
   async registerUser(id: string, nickname?: string): Promise<void> {
     await this.drizzleService.db
@@ -26,7 +26,13 @@ export class UserRepository {
         privacyAgreedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(user.id, id))
+      // a temp token signs up only once
+      .where(
+        and(
+          eq(user.id, id),
+          or(isNull(user.termsAgreedAt), isNull(user.privacyAgreedAt)),
+        ),
+      )
       .returning()
       .then(existOrThrow('User not found'));
   }
