@@ -19,6 +19,7 @@ import {
 import { AuthService } from './auth.service';
 import type { Request, Response } from 'express';
 import { JwtTokenDto } from './dto/res/token.dto';
+import { SessionRejectedDto } from './dto/res/session-rejected.dto';
 import { LoginDto } from './dto/req/login.dto';
 import { UserService } from 'src/user/user.service';
 
@@ -37,7 +38,10 @@ export class AuthController {
   })
   @ApiOkResponse({ type: JwtTokenDto, description: 'Login success' })
   @ApiUnauthorizedResponse({ description: 'Invalid code or ticket' })
-  @ApiForbiddenResponse({ description: 'Consent required' })
+  @ApiForbiddenResponse({
+    type: SessionRejectedDto,
+    description: 'Consent required',
+  })
   @ApiBadGatewayResponse({ description: 'IdP unavailable' })
   @ApiInternalServerErrorResponse({ description: 'Internal Server Error' })
   @Post('login')
