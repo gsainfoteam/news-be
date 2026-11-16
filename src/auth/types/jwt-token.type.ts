@@ -1,7 +1,6 @@
 export type JwtTokenType = {
   accessToken?: string;
   refreshToken?: string;
-  tempToken?: string;
   expiresAt?: Date;
 };
 

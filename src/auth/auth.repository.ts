@@ -5,10 +5,11 @@ import {
   UserEntity,
   existOrThrow,
 } from '@lib/drizzle';
-import { UserInfo } from '@lib/infoteam-account';
 import { refreshToken, user } from '../../drizzle/schema';
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { Loggable } from '@lib/logger';
+
+type IdpUser = { sub: string; email: string; name: string; picture?: string };
 
 @Loggable()
 @Injectable()
@@ -19,28 +20,28 @@ export class AuthRepository {
 
   /*
   INSERT INTO "user" (id, email, name, picture)
-  VALUES (userInfo.uuid, userInfo.email, userInfo.name, userInfo.picture)
+  VALUES (idpUser.sub, idpUser.email, idpUser.name, idpUser.picture)
   ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,
     name = EXCLUDED.name,
     picture = EXCLUDED.picture,
     updated_at = NOW();
   */
-  async upsertUser(userInfo: UserInfo): Promise<UserEntity> {
+  async upsertUser(idpUser: IdpUser): Promise<UserEntity> {
     return await this.drizzleService.db
       .insert(user)
       .values({
-        id: userInfo.uuid,
-        email: userInfo.email,
-        name: userInfo.name,
-        picture: userInfo.picture,
+        id: idpUser.sub,
+        email: idpUser.email,
+        name: idpUser.name,
+        picture: idpUser.picture,
       })
       .onConflictDoUpdate({
         target: user.id,
         set: {
-          email: userInfo.email,
-          name: userInfo.name,
-          picture: userInfo.picture,
+          email: idpUser.email,
+          name: idpUser.name,
+          picture: idpUser.picture,
           updatedAt: new Date(),
         },
       })

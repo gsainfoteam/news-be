@@ -5,8 +5,11 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)sx?$": "ts-jest"
+    "^.+\\.(t|j)sx?$": ["ts-jest", { "tsconfig": { "allowJs": true } }]
   },
+  "transformIgnorePatterns": [
+    "/node_modules/(?!@infoteam|@faker-js|jose|oauth4webapi|es-toolkit)"
+  ],
   "moduleNameMapper": {
     "^@lib/([^/]+)$": "<rootDir>/../libs/$1/src",
     "^@lib/([^/]+)/(.*)$": "<rootDir>/../libs/$1/src/$2"
