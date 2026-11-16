@@ -32,7 +32,9 @@
       "@lib/templates": ["libs/templates/src"],
       "@lib/templates/*": ["libs/templates/src/*"],
       "@lib/stibee": ["libs/stibee/src"],
-      "@lib/stibee/*": ["libs/stibee/src/*"]
+      "@lib/stibee/*": ["libs/stibee/src/*"],
+      "@lib/github": ["libs/github/src"],
+      "@lib/github/*": ["libs/github/src/*"]
     }
   }
 }
