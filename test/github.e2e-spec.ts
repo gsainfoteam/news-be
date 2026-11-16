@@ -42,7 +42,7 @@ describe('GithubService', () => {
     createService({
       GITHUB_APP_ID: '123',
       GITHUB_APP_INSTALLATION_ID: '456',
-      GITHUB_APP_PRIVATE_KEY: privateKey.replaceAll('\n', '\n'),
+      GITHUB_APP_PRIVATE_KEY: privateKey.replaceAll('\n', '\\n'),
     }).triggerFrontendDeploy();
     await flush();
 

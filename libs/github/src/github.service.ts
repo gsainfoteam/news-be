@@ -34,7 +34,8 @@ export class GithubService {
       this.app = {
         id,
         installationId,
-        privateKey: privateKey.replaceAll('\n', '\n'),
+        // 한 줄 env로 넣은 PEM의 \n을 실제 줄바꿈으로 되돌린다
+        privateKey: privateKey.replaceAll('\\n', '\n'),
       };
     }
   }
