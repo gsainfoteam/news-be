@@ -6,6 +6,7 @@ import { UploadUrlInfoDto } from './dto/res/upload-url-info.dto';
 import * as crypto from 'crypto';
 import { CreatePresignedUrlDto } from './dto/req/create-presigned-url.dto';
 import { FileService } from '@lib/file';
+import { GithubService } from '@lib/github';
 import { UpdateArticleDto } from './dto/req/update-article.dto';
 import { SearchArticlesDto } from './dto/req/search-articles.dto';
 import { GetArticleDto } from './dto/req/get-article.dto';
@@ -20,6 +21,7 @@ export class ArticleService {
     private readonly fileService: FileService,
     private readonly commentService: CommentService,
     private readonly subscriptionService: SubscriptionService,
+    private readonly githubService: GithubService,
   ) {}
 
   async getArticles(query: SearchArticlesDto): Promise<ArticleListDto> {
@@ -53,6 +55,7 @@ export class ArticleService {
     const article = await this.articleRepository.createArticle(body);
     const result = await this.articleRepository.getArticle(article.id);
     void this.subscriptionService.notifyNewArticle(result);
+    this.githubService.triggerFrontendDeploy();
     return new ArticleDto({
       ...result,
       thumbnailUrl:
@@ -132,6 +135,7 @@ export class ArticleService {
     }
 
     await this.articleRepository.updateArticle(id, body);
+    this.githubService.triggerFrontendDeploy();
     const article = await this.articleRepository.getArticle(id);
     return new ArticleDto({
       ...article,
@@ -143,5 +147,6 @@ export class ArticleService {
 
   async deleteArticle(id: number): Promise<void> {
     await this.articleRepository.deleteArticle(id);
+    this.githubService.triggerFrontendDeploy();
   }
 }
