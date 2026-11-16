@@ -21,7 +21,6 @@ const props: NewArticleProps = {
   // TODO: FE에 구독 설정 페이지가 아직 없어 경로를 가정함, FE 라우트가 정해지면 맞출 것
   settingsUrl: `${webUrl}/subscription`,
   homeUrl: webUrl,
-  // TODO: FE에 로고가 아직 배포되지 않아 경로를 가정함, FE 배포 후 확인할 것
   logoUrl: `${webUrl}/logo.png`,
 };
 

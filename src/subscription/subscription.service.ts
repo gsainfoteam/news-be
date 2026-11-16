@@ -83,11 +83,9 @@ export class SubscriptionService {
           .toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
           .replaceAll('-', '.'),
         // 대표 이미지가 없으면 로고로 채운다.
-        // TODO: FE에 로고가 아직 배포되지 않아 경로를 가정함, FE 배포 후 확인할 것
         imageUrl: imageKey
           ? this.fileService.getUrl(imageKey)
           : `${this.webUrl}/logo.png`,
-        // TODO: FE에 기사 페이지가 아직 없어 경로를 가정함, FE 라우트가 정해지면 맞출 것
         articleUrl: `${this.webUrl}/article/${article.id}`,
       };
 
