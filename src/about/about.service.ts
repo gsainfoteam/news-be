@@ -26,10 +26,12 @@ export class AboutService {
 
   async updateAbout(body: UpdateAboutDto): Promise<AboutDto> {
     const [about, histories] = await Promise.all([
-      this.aboutRepository.updateAbout(body),
+      this.aboutRepository.updateAbout(body).then((about) => {
+        this.githubService.triggerFrontendDeploy();
+        return about;
+      }),
       this.aboutRepository.findHistories(),
     ]);
-    this.githubService.triggerFrontendDeploy();
     return new AboutDto(about, histories);
   }
 

@@ -53,9 +53,9 @@ export class ArticleService {
     }
 
     const article = await this.articleRepository.createArticle(body);
+    this.githubService.triggerFrontendDeploy();
     const result = await this.articleRepository.getArticle(article.id);
     void this.subscriptionService.notifyNewArticle(result);
-    this.githubService.triggerFrontendDeploy();
     return new ArticleDto({
       ...result,
       thumbnailUrl:
