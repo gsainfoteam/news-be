@@ -8,8 +8,7 @@ import {
 import { refreshToken, user } from '../../drizzle/schema';
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { Loggable } from '@lib/logger';
-
-type IdpUser = { sub: string; email: string; name: string; picture?: string };
+import type { UserInfo } from '@infoteam/account-nest';
 
 @Loggable()
 @Injectable()
@@ -27,7 +26,7 @@ export class AuthRepository {
     picture = EXCLUDED.picture,
     updated_at = NOW();
   */
-  async upsertUser(idpUser: IdpUser): Promise<UserEntity> {
+  async upsertUser(idpUser: UserInfo<'name' | 'email'>): Promise<UserEntity> {
     return await this.drizzleService.db
       .insert(user)
       .values({
