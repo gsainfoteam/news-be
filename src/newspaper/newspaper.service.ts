@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { FileService } from '@lib/file';
+import { GithubService } from '@lib/github';
 import { Loggable } from '@lib/logger';
 import { NewspaperRepository } from './newspaper.repository';
 import { CreateNewspaperDto } from './dto/req/create-newspaper.dto';
@@ -19,6 +20,7 @@ export class NewspaperService {
   constructor(
     private readonly newspaperRepository: NewspaperRepository,
     private readonly fileService: FileService,
+    private readonly githubService: GithubService,
   ) {}
 
   async getUploadUrl({
@@ -40,6 +42,7 @@ export class NewspaperService {
   async createNewspaper(body: CreateNewspaperDto): Promise<NewspaperDto> {
     await this.fileService.verifyFileExist(body.fileKey);
     const newspaper = await this.newspaperRepository.createNewspaper(body);
+    this.githubService.triggerFrontendDeploy();
     return new NewspaperDto(
       newspaper,
       this.fileService.getUrl(newspaper.fileKey),
@@ -71,6 +74,7 @@ export class NewspaperService {
     if (body.fileKey) await this.fileService.verifyFileExist(body.fileKey);
 
     const newspaper = await this.newspaperRepository.updateNewspaper(id, body);
+    this.githubService.triggerFrontendDeploy();
     if (newspaper.fileKey !== before.fileKey)
       await this.removeFile(before.fileKey);
 
@@ -82,6 +86,7 @@ export class NewspaperService {
 
   async deleteNewspaper(id: number): Promise<void> {
     const { fileKey } = await this.newspaperRepository.deleteNewspaper(id);
+    this.githubService.triggerFrontendDeploy();
     await this.removeFile(fileKey);
   }
 

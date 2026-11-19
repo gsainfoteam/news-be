@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { DrizzleModule } from '@lib/drizzle';
 import { FileModule } from '@lib/file';
+import { GithubModule } from '@lib/github';
 import { MemberModule } from 'src/member/member.module';
 import { NewspaperController } from './newspaper.controller';
 import { NewspaperService } from './newspaper.service';
 import { NewspaperRepository } from './newspaper.repository';
 
 @Module({
-  imports: [DrizzleModule, FileModule, MemberModule],
+  imports: [DrizzleModule, FileModule, GithubModule, MemberModule],
   controllers: [NewspaperController],
   providers: [NewspaperService, NewspaperRepository],
 })
