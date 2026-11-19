@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 
 const API_URL = 'https://api.github.com';
 const FRONTEND_DEPLOY_WORKFLOW =
-  '/repos/gsainfoteam/news-fe/actions/workflows/deploy.yml/dispatches';
+  '/repos/gsainfoteam/news-fe/actions/workflows/production.yml/dispatches';
 
 @Loggable()
 @Injectable()
