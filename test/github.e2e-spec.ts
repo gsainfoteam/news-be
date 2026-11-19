@@ -61,7 +61,7 @@ describe('GithubService', () => {
 
     expect(post).toHaveBeenNthCalledWith(
       2,
-      'https://api.github.com/repos/gsainfoteam/news-fe/actions/workflows/deploy.yml/dispatches',
+      'https://api.github.com/repos/gsainfoteam/news-fe/actions/workflows/production.yml/dispatches',
       { ref: 'main' },
       expect.objectContaining({
         headers: expect.objectContaining({
