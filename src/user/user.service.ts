@@ -37,10 +37,10 @@ export class UserService {
         secret: this.jwtTempSecret,
       })
       .catch(() => {
-        throw new UnauthorizedException('invalid token');
+        throw new UnauthorizedException({ error: 'invalid_ticket' });
       });
     const { sub } = payload;
-    if (!sub) throw new UnauthorizedException('invalid token');
+    if (!sub) throw new UnauthorizedException({ error: 'invalid_ticket' });
 
     await this.userRepository.registerUser(sub, nickname);
 

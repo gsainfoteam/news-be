@@ -5,7 +5,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { createFakeIdp, fakeUser, FakeIdp } from '@infoteam/account-testing';
 import cookieParser from 'cookie-parser';
@@ -208,19 +208,32 @@ describe('Auth API with the account SDK', () => {
       .expect(401);
   });
 
-  it('rejects a malformed or forged ticket, a code the IdP did not issue, and transport body', async () => {
+  it('rejects a bad ticket with invalid_ticket so the SDK restarts login', async () => {
+    const jwt = new JwtService();
+    const tickets = [
+      'not-a-jwt',
+      'a.b.c',
+      jwt.sign({ sub: 'someone' }, { secret: 'forged-secret' }),
+      jwt.sign(
+        { sub: 'someone', exp: Math.floor(Date.now() / 1000) - 1 },
+        { secret: config.JWT_TEMP_SECRET },
+      ),
+      jwt.sign({}, { secret: config.JWT_TEMP_SECRET }),
+    ];
+    for (const ticket of tickets) {
+      const res = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ ticket })
+        .expect(401);
+      expect(res.body).toMatchObject({ error: 'invalid_ticket' });
+    }
+  });
+
+  it('rejects a malformed ticket field, a code the IdP did not issue, and transport body', async () => {
     await request(app.getHttpServer())
       .post('/auth/login')
       .send({ ticket: null })
       .expect(400);
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ ticket: 'not-a-jwt' })
-      .expect(401);
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ ticket: 'a.b.c' })
-      .expect(401);
     await request(app.getHttpServer())
       .post('/auth/login')
       .send({
