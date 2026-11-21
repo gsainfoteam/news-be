@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { INVALID_TICKET } from '@infoteam/account-core';
 import { UserRepository } from './user.repository';
 import { Loggable } from '@lib/logger';
 import { UserEntity } from '@lib/drizzle';
@@ -37,10 +38,10 @@ export class UserService {
         secret: this.jwtTempSecret,
       })
       .catch(() => {
-        throw new UnauthorizedException({ error: 'invalid_ticket' });
+        throw new UnauthorizedException({ error: INVALID_TICKET });
       });
     const { sub } = payload;
-    if (!sub) throw new UnauthorizedException({ error: 'invalid_ticket' });
+    if (!sub) throw new UnauthorizedException({ error: INVALID_TICKET });
 
     await this.userRepository.registerUser(sub, nickname);
 

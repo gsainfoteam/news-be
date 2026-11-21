@@ -7,6 +7,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { INVALID_TICKET } from '@infoteam/account-core';
+import { SESSION_REJECTED } from '@infoteam/account-nest';
 import { createFakeIdp, fakeUser, FakeIdp } from '@infoteam/account-testing';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
@@ -146,7 +148,7 @@ describe('Auth API with the account SDK', () => {
     const user = fakeUser();
     const rejected = await login(user, 403);
     expect(rejected.body).toMatchObject({
-      error: 'session_rejected',
+      error: SESSION_REJECTED,
       ticket: expect.any(String),
       details: { reason: 'consent_required' },
     });
@@ -225,7 +227,7 @@ describe('Auth API with the account SDK', () => {
         .post('/auth/login')
         .send({ ticket })
         .expect(401);
-      expect(res.body).toMatchObject({ error: 'invalid_ticket' });
+      expect(res.body).toMatchObject({ error: INVALID_TICKET });
     }
   });
 

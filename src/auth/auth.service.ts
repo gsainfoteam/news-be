@@ -4,7 +4,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { toHttpException } from '@infoteam/account-nest';
+import {
+  SESSION_REJECTED,
+  type SessionRejectedResponse,
+  toHttpException,
+} from '@infoteam/account-nest';
 import { AccountService } from './account';
 import { LoginDto } from './dto/req/login.dto';
 import { JwtTokenType } from './types/jwt-token.type';
@@ -53,7 +57,7 @@ export class AuthService {
     const user = await this.authRepository.upsertUser(idpUser);
     if (user.termsAgreedAt === null || user.privacyAgreedAt === null)
       throw new ForbiddenException({
-        error: 'session_rejected',
+        error: SESSION_REJECTED,
         ticket: this.jwtService.sign(
           {},
           {
@@ -63,7 +67,7 @@ export class AuthService {
           },
         ),
         details: { reason: 'consent_required' },
-      });
+      } satisfies SessionRejectedResponse);
 
     return await this.issueTokens(user.id);
   }
