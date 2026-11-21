@@ -7,8 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { INVALID_TICKET } from '@infoteam/account-core';
-import { SESSION_REJECTED } from '@infoteam/account-nest';
+import { INVALID_TICKET, SESSION_REJECTED } from '@infoteam/account-nest';
 import { createFakeIdp, fakeUser, FakeIdp } from '@infoteam/account-testing';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';

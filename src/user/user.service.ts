@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { INVALID_TICKET } from '@infoteam/account-core';
+import { INVALID_TICKET } from '@infoteam/account-nest';
 import { UserRepository } from './user.repository';
 import { Loggable } from '@lib/logger';
 import { UserEntity } from '@lib/drizzle';
