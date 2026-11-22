@@ -66,7 +66,7 @@ export class AuthService {
             expiresIn: '5m',
           },
         ),
-        details: { reason: 'consent_required' },
+        reason: 'consent_required',
       } satisfies SessionRejectedResponse);
 
     return await this.issueTokens(user.id);

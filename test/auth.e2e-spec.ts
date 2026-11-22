@@ -149,8 +149,9 @@ describe('Auth API with the account SDK', () => {
     expect(rejected.body).toMatchObject({
       error: SESSION_REJECTED,
       ticket: expect.any(String),
-      details: { reason: 'consent_required' },
+      reason: 'consent_required',
     });
+    expect(rejected.body).not.toHaveProperty('details');
     expect(users.get(user.sub)?.termsAgreedAt).toBeNull();
 
     const signup = {
