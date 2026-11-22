@@ -1,11 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SESSION_REJECTED } from '@infoteam/account-nest';
 
-class SessionRejectedDetailsDto {
-  @ApiProperty({ example: 'consent_required' })
-  reason!: string;
-}
-
 export class SessionRejectedDto {
   @ApiProperty({ example: SESSION_REJECTED })
   error!: typeof SESSION_REJECTED;
@@ -18,6 +13,6 @@ export class SessionRejectedDto {
   })
   ticket!: string;
 
-  @ApiProperty({ type: SessionRejectedDetailsDto })
-  details!: SessionRejectedDetailsDto;
+  @ApiProperty({ example: 'consent_required' })
+  reason!: string;
 }
