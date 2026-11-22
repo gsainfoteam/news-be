@@ -37,7 +37,10 @@ export class AuthController {
       'A user who has not agreed to the terms gets 403 `session_rejected` with a `ticket`, and logs in again with `{ ticket, nickname }` to sign up.',
   })
   @ApiOkResponse({ type: JwtTokenDto, description: 'Login success' })
-  @ApiUnauthorizedResponse({ description: 'Invalid code or ticket' })
+  @ApiUnauthorizedResponse({
+    description:
+      'Invalid code, or `invalid_ticket` when the sign-up ticket is invalid or expired',
+  })
   @ApiForbiddenResponse({
     type: SessionRejectedDto,
     description: 'Consent required',
